@@ -88,14 +88,6 @@ base_def = 6.0
 move_speed = 100.0
 xp_reward = 400
 
-[node name="ItemDrop_Claws" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(425, 220)
-
-[node name="ItemDrop_Boots" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(1025, 420)
-
-[node name="ItemDrop_Potion" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(1300, 425)
 
 [node name="Merchant" parent="." instance=ExtResource("9_merchant")]
 position = Vector2(100, 330)

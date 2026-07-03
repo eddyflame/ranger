@@ -114,14 +114,6 @@ xp_reward = 600
 is_ranged = true
 attack_range = 300.0
 
-[node name="ItemDrop_Claws" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(450, 425)
-
-[node name="ItemDrop_Boots" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(900, 175)
-
-[node name="ItemDrop_Potion" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(1300, 425)
 
 [node name="Merchant" parent="." instance=ExtResource("7_merchant")]
 position = Vector2(100, 330)

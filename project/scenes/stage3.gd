@@ -3,10 +3,11 @@ extends Node2D
 const SynthAudio = preload("res://scenes/synth_audio.gd")
 const SaveSystem = preload("res://scenes/save_system.gd")
 
-@onready var claw_item = $ItemDrop_Claws
-@onready var boots_item = $ItemDrop_Boots
-@onready var potion_item = $ItemDrop_Potion
 @onready var player = $Player
+
+# Enemy respawn data
+var enemy_spawn_data: Array = []
+var respawn_timer: Timer = null
 
 # Complex double-loop winding road outlines for Stage 3
 var OUTLINE_POINTS := PackedVector2Array([
@@ -37,39 +38,23 @@ func _ready():
 	# 2. Spawn forest border walls
 	spawn_forest_borders()
 
-	# Define item datas
-	var claws_data = {
-		"name": "⚪[普通] 铁木长弓 (Elven Bow)",
-		"type": "weapon",
-		"atk_bonus": 3.0,
-		"grade": "common",
-		"cost": 16,
-		"description": "+3 点攻击力。"
-	}
-	var boots_data = {
-		"name": "⚪[普通] 野外软鞋 (Wild Boots)",
-		"type": "boots",
-		"speed_bonus": 15.0,
-		"grade": "common",
-		"cost": 16,
-		"description": "+15 点移动速度。"
-	}
-	var potion_data = {
-		"name": "治疗药水",
-		"type": "potion",
-		"hp_restore": 150.0,
-		"cost": 15,
-		"description": "恢复 150 HP。"
-	}
-	
-	if claw_item:
-		claw_item.set_item_data(claws_data)
-	if boots_item:
-		boots_item.set_item_data(boots_data)
-	if potion_item:
-		potion_item.set_item_data(potion_data)
-		
-	# 4. Connect signals for all Character children (for damage / healing floating numbers)
+	# Record enemy spawn info for 5-minute respawn
+	for child in get_children():
+		if child.is_in_group("enemies"):
+			enemy_spawn_data.append({
+				"scene_path": child.scene_file_path,
+				"position": child.global_position
+			})
+
+	# Setup 5-minute respawn timer
+	respawn_timer = Timer.new()
+	respawn_timer.wait_time = 300.0
+	respawn_timer.one_shot = false
+	respawn_timer.autostart = true
+	respawn_timer.timeout.connect(_respawn_enemies)
+	add_child(respawn_timer)
+
+	# 4. Connect signals for all Character children
 	for child in get_children():
 		if child.has_signal("damage_taken"):
 			child.connect("damage_taken", Callable(self, "_on_character_damage_taken").bind(child))
@@ -278,15 +263,48 @@ func _on_player_level_up(new_level: int):
 		
 	SynthAudio.play_heal(self)
 
+func _respawn_enemies():
+	var living = get_tree().get_nodes_in_group("enemies")
+	if living.size() > 0:
+		return
+	print("[Respawn] 5 minutes elapsed — spawning new enemy wave")
+	for spawn in enemy_spawn_data:
+		if spawn.scene_path == "": continue
+		var enemy_scene = load(spawn.scene_path)
+		if enemy_scene:
+			var enemy_inst = enemy_scene.instantiate()
+			enemy_inst.global_position = spawn.position
+			add_child(enemy_inst)
+			if enemy_inst.has_signal("damage_taken"):
+				enemy_inst.connect("damage_taken", Callable(self, "_on_character_damage_taken").bind(enemy_inst))
+			if enemy_inst.has_signal("healed"):
+				enemy_inst.connect("healed", Callable(self, "_on_character_healed").bind(enemy_inst))
+			if enemy_inst.has_signal("boss_stomped"):
+				enemy_inst.connect("boss_stomped", Callable(self, "_on_boss_stomped").bind(enemy_inst))
+			if enemy_inst.is_in_group("enemies") and enemy_inst.has_signal("died"):
+				enemy_inst.connect("died", Callable(self, "_on_enemy_died").bind(enemy_inst))
+
 func _on_enemy_died(enemy_node):
 	if not enemy_node: return
 	var is_boss = ("Boss" in enemy_node.name)
-	var loot = SaveSystem.generate_graded_loot(is_boss)
-	
-	# Spawn physical drop at death position
-	SaveSystem.spawn_loot_drop(self, enemy_node.global_position, loot)
-	
-	# Unlock item in shop catalog and save game
-	SaveSystem.register_unlocked_item(loot)
+	var death_pos = enemy_node.global_position
+
+	if is_boss:
+		for i in range(3):
+			var loot = SaveSystem.generate_graded_loot(true)
+			var scatter = Vector2(randf_range(-60, 60), randf_range(-40, 40))
+			SaveSystem.spawn_loot_drop(self, death_pos + scatter, loot)
+			SaveSystem.register_unlocked_item(loot)
+		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 Boss已击杀！6秒后通关…", Color(1.0, 0.85, 0.15))
+		var delay_timer = get_tree().create_timer(6.0)
+		delay_timer.timeout.connect(func():
+			var gm = get_node_or_null("GameManager")
+			if gm: gm.trigger_victory()
+		)
+	else:
+		var loot = SaveSystem.generate_graded_loot(false)
+		SaveSystem.spawn_loot_drop(self, death_pos, loot)
+		SaveSystem.register_unlocked_item(loot)
+
 	if player:
 		SaveSystem.save_game(player)

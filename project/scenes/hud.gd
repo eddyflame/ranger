@@ -609,8 +609,11 @@ func populate_shop():
 				"data": item
 			})
 			
-	# Instantiate shop panels dynamically
+	# Instantiate shop panels dynamically — skip common (white) gear
 	for item in catalog:
+		var item_grade = item.data.get("grade", "common")
+		if item_grade == "common" and item.data.get("type", "") not in ["potion", "ankh"]:
+			continue
 		var panel = Panel.new()
 		panel.custom_minimum_size = Vector2(150, 230)
 		
