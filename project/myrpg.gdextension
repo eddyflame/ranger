@@ -1,0 +1,15 @@
+[configuration]
+entry_symbol = "GDExtensionInit"
+compatibility_minimum = "4.1"
+
+[libraries]
+macos.debug = "res://bin/libmyrpg.macos.template_debug.dylib"
+macos.release = "res://bin/libmyrpg.macos.template_release.dylib"
+macos.debug.arm64 = "res://bin/libmyrpg.macos.template_debug.arm64.dylib"
+macos.release.arm64 = "res://bin/libmyrpg.macos.template_release.arm64.dylib"
+macos.debug.x86_64 = "res://bin/libmyrpg.macos.template_debug.x86_64.dylib"
+macos.release.x86_64 = "res://bin/libmyrpg.macos.template_release.x86_64.dylib"
+windows.debug.x86_64 = "res://bin/libmyrpg.windows.template_debug.x86_64.dll"
+windows.release.x86_64 = "res://bin/libmyrpg.windows.template_release.x86_64.dll"
+linux.debug.x86_64 = "res://bin/libmyrpg.linux.template_debug.x86_64.so"
+linux.release.x86_64 = "res://bin/libmyrpg.linux.template_release.x86_64.so"

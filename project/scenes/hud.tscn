@@ -1,0 +1,273 @@
+[gd_scene load_steps=2 format=3 uid="uid://dhud"]
+
+[ext_resource type="Script" path="res://scenes/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BottomBar" type="PanelContainer" parent="Control"]
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -140.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel" type="Panel" parent="Control/BottomBar"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 150.0
+offset_bottom = 33.0
+text = "LEVEL: 1"
+
+[node name="StatsLabel" type="Label" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 40.0
+offset_right = 350.0
+offset_bottom = 120.0
+text = "ATK: 10   DEF: 1.0
+力量(STR): 10  敏捷(AGI): 10  智力(INT): 10"
+
+[node name="HPBar" type="ProgressBar" parent="Control/BottomBar/Panel"]
+modulate = Color(1, 0, 0, 1)
+layout_mode = 0
+offset_left = 370.0
+offset_top = 15.0
+offset_right = 670.0
+offset_top = 45.0
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="Control/BottomBar/Panel/HPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "HP: 100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MPBar" type="ProgressBar" parent="Control/BottomBar/Panel"]
+modulate = Color(0, 0, 1, 1)
+layout_mode = 0
+offset_left = 370.0
+offset_top = 55.0
+offset_right = 670.0
+offset_top = 85.0
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="Control/BottomBar/Panel/MPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "MP: 50 / 50"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="XPBar" type="ProgressBar" parent="Control/BottomBar/Panel"]
+modulate = Color(0.8, 0.8, 0, 1)
+layout_mode = 0
+offset_left = 370.0
+offset_top = 95.0
+offset_right = 670.0
+offset_top = 115.0
+value = 0.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="Control/BottomBar/Panel/XPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "XP: 0 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InventoryGrid" type="GridContainer" parent="Control/BottomBar/Panel"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -270.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+grow_horizontal = 0
+grow_vertical = 2
+columns = 3
+
+[node name="Slot0" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot1" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot2" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot3" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot4" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot5" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 2
+text = "Empty"
+
+[node name="Skills" type="HBoxContainer" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 690.0
+offset_top = 15.0
+offset_right = 870.0
+offset_top = 120.0
+theme_override_constants/separation = 10
+
+[node name="BtnQ" type="Button" parent="Control/BottomBar/Panel/Skills"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+text = "Q
+Searing"
+
+[node name="BtnW" type="Button" parent="Control/BottomBar/Panel/Skills"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+text = "W
+Windwalk"
+
+[node name="GameOverScreen" type="ColorRect" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.15, 0.05, 0.05, 0.75)
+
+[node name="VBox" type="VBoxContainer" parent="Control/GameOverScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -60.0
+offset_right = 150.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Control/GameOverScreen/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 40
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="BtnRestart" type="Button" parent="Control/GameOverScreen/VBox"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Restart Level"
+
+[node name="VictoryScreen" type="ColorRect" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.15, 0.05, 0.75)
+
+[node name="VBox" type="VBoxContainer" parent="Control/VictoryScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -60.0
+offset_right = 150.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Control/VictoryScreen/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 0.2, 1)
+theme_override_font_sizes/font_size = 40
+text = "VICTORY!"
+horizontal_alignment = 1
+
+[node name="BtnRestart" type="Button" parent="Control/VictoryScreen/VBox"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Play Again"
+
+[node name="Instructions" type="PanelContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -280.0
+offset_top = 10.0
+offset_right = 280.0
+offset_bottom = 75.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Control/Instructions"]
+layout_mode = 2
+mouse_filter = 2
+text = "第一关：荒野猎魔 (Stage 1: Wilderness Hunt)
+操作说明: [右键] 移动/选择攻击怪物/捡取装备。 [Q] 开启/关闭灼热之箭技能。 [W] 使用疾风步隐身加速。
+通关目标: 探索地图寻找宝箱获取装备，击败地图尽头的 Corrupted Treant (Boss) 通关！"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="pressed" from="Control/GameOverScreen/VBox/BtnRestart" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="Control/VictoryScreen/VBox/BtnRestart" to="." method="_on_restart_pressed"]

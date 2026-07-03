@@ -1,0 +1,21 @@
+# Godot-specific ignores
+.godot/
+*.translation
+
+# SCons and C++ compile artifacts
+.sconsign.dblite
+.sconf_temp/
+*.o
+*.os
+*.obj
+*.dSYM/
+
+# Compiled GDExtension binaries (exclude from repo, build from source)
+project/bin/libmyrpg.*
+project/bin/myrpg.*
+
+# OS-specific ignores
+.DS_Store
+Thumbs.db
+
+.agents
