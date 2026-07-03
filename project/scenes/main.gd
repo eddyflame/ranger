@@ -21,7 +21,14 @@ var OUTLINE_POINTS := PackedVector2Array([
 ])
 
 func _ready():
-	SaveSystem.delete_save()
+	if player:
+		if not SaveSystem.load_game(player):
+			# Baseline starting stats for Stage 1 (fresh level 1)
+			player.set_level(1)
+			player.set_xp(0)
+			player.set_gold(0)
+			player.set_skill_points(0)
+			player.set_inventory([{}, {}, {}, {}, {}, {}, {}, {}])
 	print("--- MAIN READY: PRINTING CHILDREN ---")
 	for child in get_children():
 		print("Child Name: ", child.name, " | Class: ", child.get_class(), " | Position: ", child.position if child is Node2D else "N/A")

@@ -29,6 +29,7 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 
 @onready var game_over_screen = $Control/GameOverScreen
 @onready var victory_screen = $Control/VictoryScreen
+@onready var pause_menu = $Control/PauseMenu
 @onready var btn_next_stage = $Control/VictoryScreen/VBox/BtnNextStage
 @onready var game_over_menu_btn = $Control/GameOverScreen/VBox/BtnMenu
 @onready var victory_menu_btn = $Control/VictoryScreen/VBox/BtnMenu
@@ -52,6 +53,7 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var boss_hp_lbl = $Control/BossHPBar/VBox/HPBar/Label
 
 var player: CharacterBody2D = null
+var _is_ready = false
 
 func _ready():
 	await get_tree().process_frame
@@ -154,8 +156,7 @@ func _ready():
 		item4_panel.show()
 	else:
 		item4_panel.hide()
-
-
+	_is_ready = true
 
 func _process(delta):
 	if player:
@@ -229,6 +230,8 @@ func _on_xp_changed(xp, max_xp):
 func _on_level_up(new_level):
 	lvl_lbl.text = "LEVEL: %d" % new_level
 	update_stats_display()
+	if _is_ready and player:
+		SaveSystem.save_game(player)
 
 func get_item_emoji(item: Dictionary) -> String:
 	var item_name = item.get("name", "")
@@ -360,10 +363,12 @@ func _on_skill_e_pressed():
 func _on_upgrade_attribute(attr_name: String):
 	if player:
 		player.upgrade_attribute(attr_name)
+		SaveSystem.save_game(player)
 
 func _on_learn_skill(skill_name: String):
 	if player:
 		player.learn_skill(skill_name)
+		SaveSystem.save_game(player)
 
 func _on_victory():
 	victory_screen.show()
@@ -388,9 +393,15 @@ func _on_victory():
 		btn_restart.text = "重新开始游戏 (Restart Game)"
 
 func _on_next_stage_pressed():
-	if player:
-		SaveSystem.save_game(player)
 	var current_scene = get_tree().current_scene.scene_file_path
+	if player:
+		if current_scene.contains("main.tscn"):
+			SaveSystem.save_game(player, 2)
+		elif current_scene.contains("stage2.tscn"):
+			SaveSystem.save_game(player, 3)
+		else:
+			SaveSystem.save_game(player)
+			
 	if current_scene.contains("main.tscn"):
 		get_tree().change_scene_to_file("res://scenes/stage2.tscn")
 	elif current_scene.contains("stage2.tscn"):
@@ -400,6 +411,7 @@ func _on_game_over():
 	game_over_screen.show()
 
 func _on_restart_pressed():
+	get_tree().paused = false
 	var gm = get_tree().current_scene.get_node_or_null("GameManager")
 	if gm:
 		gm.restart_game()
@@ -442,6 +454,7 @@ func _on_buy_item_pressed(item_name: String, cost: int, item_data: Dictionary):
 		SynthAudio.play_purchase(self)
 		_show_shop_status("✓ 已购买: " + item_name, Color(0.2, 0.9, 0.2))
 		print("[Shop] Purchase success: ", item_name, " remaining gold: ", player.get_gold())
+		SaveSystem.save_game(player)
 	else:
 		_show_shop_status("背包已满！（共6格）", Color(1, 0.3, 0.1))
 		print("[Shop] Buy failed: inventory full")
@@ -482,7 +495,29 @@ func _on_player_resurrected():
 
 func _on_return_to_menu_pressed():
 	# Go back to main menu
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+
+func _input(event):
+	if event.is_action_pressed("ui_cancel"): # ESC key maps to ui_cancel by default
+		if game_over_screen.visible or victory_screen.visible:
+			return
+		if pause_menu.visible:
+			_on_resume_pressed()
+		else:
+			get_tree().paused = true
+			pause_menu.show()
+
+func _on_resume_pressed():
+	get_tree().paused = false
+	pause_menu.hide()
+
+func _on_save_pressed():
+	if player:
+		SaveSystem.save_game(player)
+		var main_scene = get_tree().current_scene
+		if main_scene and main_scene.has_method("spawn_floating_text"):
+			main_scene.call("spawn_floating_text", player.global_position + Vector2(0, -30), "💾 游戏已手动保存！", Color(0.2, 0.9, 0.2))
 
 func _on_revive_spot_pressed():
 	if player:

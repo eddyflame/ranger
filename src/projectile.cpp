@@ -28,7 +28,21 @@ void Projectile::_physics_process(double delta) {
         return;
     }
 
-    if (target && !target->is_queued_for_deletion()) {
+    bool is_target_valid = false;
+    if (target_id != 0 && UtilityFunctions::is_instance_id_valid((int64_t)target_id)) {
+        if (target && !target->is_queued_for_deletion()) {
+            is_target_valid = true;
+        }
+    }
+
+    Node *actual_attacker = nullptr;
+    if (attacker_id != 0 && UtilityFunctions::is_instance_id_valid((int64_t)attacker_id)) {
+        if (attacker && !attacker->is_queued_for_deletion()) {
+            actual_attacker = attacker;
+        }
+    }
+
+    if (is_target_valid) {
         Vector2 target_pos = target->get_global_position();
         Vector2 current_pos = get_global_position();
         
@@ -40,7 +54,7 @@ void Projectile::_physics_process(double delta) {
         if (dist <= speed * delta) {
             // Hit!
             if (target->has_method("take_damage")) {
-                target->call("take_damage", damage, attacker);
+                target->call("take_damage", damage, actual_attacker);
             }
             queue_free();
         } else {

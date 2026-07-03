@@ -204,6 +204,13 @@ size_flags_horizontal = 4
 theme_override_colors/font_hover_color = Color(0.95, 0.8, 0.2, 1)
 text = "继续上次游戏"
 
+[node name="BtnNewGame" type="Button" parent="CenterContainer/VBox/BottomRow"]
+custom_minimum_size = Vector2(300, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_hover_color = Color(0.85, 0.2, 0.2, 1)
+text = "新游戏 (重置进度)"
+
 [node name="BtnQuit" type="Button" parent="CenterContainer/VBox/BottomRow"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2
@@ -214,4 +221,5 @@ text = "退出游戏"
 [connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage2/VBox/BtnStart2" to="." method="_on_stage2_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox/BtnStart3" to="." method="_on_stage3_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnContinue" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnNewGame" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnQuit" to="." method="_on_quit_pressed"]

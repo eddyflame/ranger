@@ -3,10 +3,43 @@ class_name SaveSystem
 
 const SAVE_PATH = "user://rangers_path_save.json"
 
-static func save_game(player: Node2D) -> void:
+static func save_game(player: Node2D, next_level_override: int = -1) -> void:
 	if not player: return
 	
+	# Determine current stage index from current scene filename if not overridden
+	var level_index = 1
+	if next_level_override > 0:
+		level_index = next_level_override
+	else:
+		var current_scene = player.get_tree().current_scene
+		if current_scene:
+			var path = current_scene.scene_file_path
+			if path.contains("stage2"):
+				level_index = 2
+			elif path.contains("stage3"):
+				level_index = 3
+			else:
+				level_index = 1
+	
+	# Read the previous max_unlocked_level from existing save file if it exists
+	var max_unlocked_level = 1
+	if FileAccess.file_exists(SAVE_PATH):
+		var file_read = FileAccess.open(SAVE_PATH, FileAccess.READ)
+		if file_read:
+			var old_text = file_read.get_as_text()
+			file_read.close()
+			var json_old = JSON.new()
+			if json_old.parse(old_text) == OK:
+				var old_data = json_old.get_data()
+				if typeof(old_data) == TYPE_DICTIONARY:
+					max_unlocked_level = int(old_data.get("max_unlocked_level", 1))
+					
+	# The max unlocked level is the highest stage the player has unlocked/reached
+	max_unlocked_level = max(max_unlocked_level, level_index)
+	
 	var save_data = {
+		"level_index": level_index,
+		"max_unlocked_level": max_unlocked_level,
 		"level": player.level,
 		"xp": player.get_xp(),
 		"gold": player.get_gold(),

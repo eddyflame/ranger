@@ -11,7 +11,9 @@ class Projectile : public Node2D {
 
 private:
     Node2D *target = nullptr;
+    uint64_t target_id = 0;
     Node *attacker = nullptr;
+    uint64_t attacker_id = 0;
     
     float speed = 350.0f;
     float damage = 10.0f;
@@ -29,10 +31,16 @@ public:
     void _ready() override;
     void _physics_process(double delta) override;
 
-    void set_target(Node2D *p_target) { target = p_target; }
+    void set_target(Node2D *p_target) {
+        target = p_target;
+        target_id = p_target ? (uint64_t)p_target->get_instance_id() : 0;
+    }
     Node2D *get_target() const { return target; }
 
-    void set_attacker(Node *p_attacker) { attacker = p_attacker; }
+    void set_attacker(Node *p_attacker) {
+        attacker = p_attacker;
+        attacker_id = p_attacker ? (uint64_t)p_attacker->get_instance_id() : 0;
+    }
     Node *get_attacker() const { return attacker; }
 
     void set_speed(float p_speed) { speed = p_speed; }
