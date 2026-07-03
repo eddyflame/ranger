@@ -462,13 +462,29 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -150.0
-offset_top = 15.0
+offset_top = 10.0
 offset_right = 150.0
-offset_bottom = 45.0
+offset_bottom = 35.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
 theme_override_font_sizes/font_size = 20
 text = "神秘商店 (Mystic Shop)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SellTipLabel" type="Label" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 35.0
+offset_right = 300.0
+offset_bottom = 55.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "【出售提示：商店开启时，直接点击您下方背包中的装备即可将其半价出售】"
 horizontal_alignment = 1
 vertical_alignment = 1
 

@@ -198,7 +198,7 @@ func _process(delta):
 
 	# Dynamic Boss HP Bar
 	var boss = get_tree().current_scene.get_node_or_null("Boss")
-	if boss and player and not boss.get_is_dead() and player.global_position.distance_to(boss.global_position) < 650.0:
+	if boss and player and not boss.get_is_dead() and player.global_position.distance_to(boss.global_position) < 1000.0:
 		boss_hp_bar_container.show()
 		boss_name_lbl.text = boss.get_character_name()
 		var b_hp = boss.hp
@@ -300,9 +300,50 @@ func update_stats_display():
 	agi_lbl.text = "AGI: %d" % agi_val
 	int_lbl.text = "INT: %d" % int_val
 
+func get_sell_price(item_name: String) -> int:
+	if item_name.contains("Vampiric") or item_name.contains("吸血之刃"):
+		return 30
+	elif item_name.contains("Plate") or item_name.contains("防御板甲"):
+		return 25
+	elif item_name.contains("Boots") or item_name.contains("急速之靴"):
+		return 22
+	elif item_name.contains("Ranger") or item_name.contains("游侠徽记"):
+		return 60
+	elif item_name.contains("Ankh") or item_name.contains("复活"):
+		return 40
+	elif item_name.contains("Potion") or item_name.contains("治疗药水"):
+		return 7
+	elif item_name.contains("Claws") or item_name.contains("攻击之爪"):
+		return 15
+	return 10 # default fallback
+
 func _on_inventory_slot_pressed(slot_index):
 	if player:
-		player.use_item(slot_index)
+		if shop_panel.visible:
+			var inv = player.get_inventory()
+			if slot_index < inv.size():
+				var item = inv[slot_index]
+				if item and not item.is_empty():
+					var item_name = item.get("name", "")
+					var sell_price = get_sell_price(item_name)
+					
+					# Give gold to player
+					player.set_gold(player.get_gold() + sell_price)
+					
+					# Remove item from inventory
+					player.remove_from_inventory(slot_index)
+					
+					# Play purchase sound or sell sound
+					SynthAudio.play_purchase(self)
+					
+					# Show status message
+					_show_shop_status("✓ 已售出: %s，获得 %d 金币" % [item_name, sell_price], Color(0.2, 0.9, 0.2))
+					
+					# Update hud
+					_on_gold_changed(player.get_gold())
+					_on_inventory_changed()
+		else:
+			player.use_item(slot_index)
 
 func _on_skill_q_pressed():
 	if player:

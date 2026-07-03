@@ -81,7 +81,7 @@ base_def = 2.0
 xp_reward = 110
 
 [node name="Enemy_Wolf3" parent="." instance=ExtResource("3_enemy")]
-position = Vector2(900, 375)
+position = Vector2(1125, 300)
 character_name = "Void Stalker"
 level = 7
 strength = 28
@@ -91,7 +91,7 @@ base_def = 4.5
 xp_reward = 120
 
 [node name="Enemy_Spitter3" parent="." instance=ExtResource("4_ranged")]
-position = Vector2(900, 425)
+position = Vector2(1300, 425)
 character_name = "Void Spitter"
 level = 7
 strength = 18
@@ -121,7 +121,7 @@ position = Vector2(450, 425)
 position = Vector2(900, 175)
 
 [node name="ItemDrop_Potion" parent="." instance=ExtResource("6_itemdrop")]
-position = Vector2(900, 375)
+position = Vector2(1300, 425)
 
 [node name="Merchant" parent="." instance=ExtResource("7_merchant")]
 position = Vector2(1150, 425)
