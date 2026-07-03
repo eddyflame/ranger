@@ -50,6 +50,9 @@ void HeroPlayer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_gold"), &HeroPlayer::get_gold);
     ClassDB::bind_method(D_METHOD("set_gold", "gold"), &HeroPlayer::set_gold);
     ClassDB::bind_method(D_METHOD("get_lifesteal_percent"), &HeroPlayer::get_lifesteal_percent);
+    ClassDB::bind_method(D_METHOD("get_total_crit_chance"), &HeroPlayer::get_total_crit_chance);
+    ClassDB::bind_method(D_METHOD("get_total_evasion_chance"), &HeroPlayer::get_total_evasion_chance);
+    ClassDB::bind_method(D_METHOD("get_total_block_amount"), &HeroPlayer::get_total_block_amount);
     
     ClassDB::bind_method(D_METHOD("set_xp", "xp"), &HeroPlayer::set_xp);
     ClassDB::bind_method(D_METHOD("set_skill_points", "skill_points"), &HeroPlayer::set_skill_points);
@@ -418,6 +421,12 @@ void HeroPlayer::shoot_projectile(Node2D *target, bool searing_shot) {
                 set_modulate(Color(1.0f, 1.0f, 1.0f, 1.0f));
             }
             
+            float crit_chance = get_total_crit_chance();
+            if (crit_chance > 0.0f && UtilityFunctions::randf() < crit_chance) {
+                dmg *= 2.0f;
+                proj->set_meta("is_crit", true);
+            }
+            
             proj->set_damage(dmg);
             proj->set_attacker(this);
             get_parent()->add_child(proj);
@@ -653,6 +662,39 @@ float HeroPlayer::get_lifesteal_percent() const {
     return lifesteal;
 }
 
+float HeroPlayer::get_total_crit_chance() const {
+    float total_crit = 0.0f;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty()) {
+            total_crit += (float)slot.get("crit_chance", 0.0f);
+        }
+    }
+    return total_crit;
+}
+
+float HeroPlayer::get_total_evasion_chance() const {
+    float total_evade = 0.0f;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty()) {
+            total_evade += (float)slot.get("evade_chance", 0.0f);
+        }
+    }
+    return total_evade;
+}
+
+float HeroPlayer::get_total_block_amount() const {
+    float total_block = 0.0f;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty()) {
+            total_block += (float)slot.get("block_amount", 0.0f);
+        }
+    }
+    return total_block;
+}
+
 float HeroPlayer::get_total_max_hp() const {
     float bonus_hp = 0.0f;
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
@@ -676,10 +718,13 @@ void HeroPlayer::die() {
     }
 
     if (ankh_slot != -1) {
-        // Automatic item-based resurrection
-        remove_from_inventory(ankh_slot);
+        // Restore HP and MP to maximum FIRST before removing the item from inventory.
+        // This ensures recalculate_item_bonuses() (called inside remove_from_inventory)
+        // will check a positive HP value and not trigger die() recursively!
         hp = get_total_max_hp();
         mp = get_total_max_mp();
+
+        remove_from_inventory(ankh_slot);
         
         emit_signal("hp_changed", 0.0f, hp, get_total_max_hp());
         emit_signal("mp_changed", 0.0f, mp, get_total_max_mp());

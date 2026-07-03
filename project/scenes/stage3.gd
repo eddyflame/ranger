@@ -18,9 +18,9 @@ var OUTLINE_POINTS := PackedVector2Array([
 func _ready():
 	if player:
 		if not SaveSystem.load_game(player):
-			# Baseline stats for starting Stage 3 directly
-			player.set_level(6)
-			player.set_skill_points(5)
+			# Baseline stats for starting Stage 3 directly (Level 1 reset, 1 skill point)
+			player.set_level(1)
+			player.set_skill_points(1)
 			player.set_gold(200)
 			var starter_inv = [
 				{"name": "Vampiric Blade", "type": "weapon", "atk_bonus": 8.0, "lifesteal_percent": 0.15, "description": "+8 ATK, 15% Lifesteal."},
@@ -39,22 +39,27 @@ func _ready():
 
 	# Define item datas
 	var claws_data = {
-		"name": "Claws of Attack +6",
+		"name": "⚪[普通] 铁木长弓 (Elven Bow)",
 		"type": "weapon",
-		"atk_bonus": 6.0,
-		"description": "Increases Attack Power by 6."
+		"atk_bonus": 3.0,
+		"grade": "common",
+		"cost": 16,
+		"description": "+3 点攻击力。"
 	}
 	var boots_data = {
-		"name": "Boots of Speed",
+		"name": "⚪[普通] 野外软鞋 (Wild Boots)",
 		"type": "boots",
-		"speed_bonus": 45.0,
-		"description": "Increases Movement Speed by 45."
+		"speed_bonus": 15.0,
+		"grade": "common",
+		"cost": 16,
+		"description": "+15 点移动速度。"
 	}
 	var potion_data = {
-		"name": "Potion of Healing",
+		"name": "治疗药水",
 		"type": "potion",
 		"hp_restore": 150.0,
-		"description": "Consumable. Restores 150 HP."
+		"cost": 15,
+		"description": "恢复 150 HP。"
 	}
 	
 	if claw_item:
@@ -64,11 +69,6 @@ func _ready():
 	if potion_item:
 		potion_item.set_item_data(potion_data)
 		
-	# Configure any specific creep loot tables if needed
-	for child in get_children():
-		if child.is_in_group("enemies") and child.name != "Boss":
-			child.add_loot_item(potion_data)
-
 	# 4. Connect signals for all Character children (for damage / healing floating numbers)
 	for child in get_children():
 		if child.has_signal("damage_taken"):
@@ -77,6 +77,9 @@ func _ready():
 			child.connect("healed", Callable(self, "_on_character_healed").bind(child))
 		if child.has_signal("boss_stomped"):
 			child.connect("boss_stomped", Callable(self, "_on_boss_stomped").bind(child))
+		# Connect enemy death to dynamic loot generation
+		if child.is_in_group("enemies") and child.has_signal("died"):
+			child.connect("died", Callable(self, "_on_enemy_died").bind(child))
 			
 	# Connect XP, gold, shoot, blink, level up signals on player
 	if player:
@@ -144,16 +147,37 @@ func spawn_forest_borders():
 			add_child(tree_inst)
 
 func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
+	if victim.has_meta("last_damage_status") and victim.get_meta("last_damage_status") == "evaded":
+		victim.remove_meta("last_damage_status")
+		spawn_floating_text(victim.global_position + Vector2(0, -25), "闪避 (Evaded)!", Color(0.4, 0.7, 1.0))
+		return
+		
 	if amount <= 0.0: return
 	
 	var color = Color(0.95, 0.2, 0.2)
+	var text_prefix = ""
+	
+	if attacker and attacker.has_meta("last_hit_was_crit") and attacker.get_meta("last_hit_was_crit"):
+		attacker.remove_meta("last_hit_was_crit")
+		color = Color(1.0, 0.15, 0.15)
+		text_prefix = "暴击 "
+		if victim == player:
+			player.call("trigger_shake", 12.0, 0.3)
+		else:
+			if player: player.call("trigger_shake", 8.0, 0.2)
+			
 	if attacker and attacker.has_method("get_searing_effect") and attacker.call("get_searing_effect"):
 		color = Color(1.0, 0.5, 0.0)
-	
-	if victim == player:
-		color = Color(1.0, 0.1, 0.1)
 		
-	spawn_floating_text(victim.global_position + Vector2(0, -20), "-%d" % int(amount), color)
+	var block_suffix = ""
+	if victim.has_meta("last_damage_status") and victim.get_meta("last_damage_status") == "blocked":
+		victim.remove_meta("last_damage_status")
+		block_suffix = " (格挡)"
+		
+	if victim == player and text_prefix == "":
+		color = Color(1.0, 0.2, 0.2)
+		
+	spawn_floating_text(victim.global_position + Vector2(0, -20), "%s-%d%s" % [text_prefix, int(amount), block_suffix], color)
 	SynthAudio.play_hit(self)
 	
 	if victim == player:
@@ -253,3 +277,16 @@ func _on_player_level_up(new_level: int):
 		spawn_floating_text(player.global_position + Vector2(0, -50), "★ LEVEL UP! ★", Color(1.0, 0.85, 0.15))
 		
 	SynthAudio.play_heal(self)
+
+func _on_enemy_died(enemy_node):
+	if not enemy_node: return
+	var is_boss = ("Boss" in enemy_node.name)
+	var loot = SaveSystem.generate_graded_loot(is_boss)
+	
+	# Spawn physical drop at death position
+	SaveSystem.spawn_loot_drop(self, enemy_node.global_position, loot)
+	
+	# Unlock item in shop catalog and save game
+	SaveSystem.register_unlocked_item(loot)
+	if player:
+		SaveSystem.save_game(player)

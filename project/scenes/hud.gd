@@ -38,12 +38,7 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var shop_panel = $Control/ShopPanel
 @onready var shop_gold_lbl = $Control/ShopPanel/ShopGoldLabel
 @onready var btn_shop_close = $Control/ShopPanel/BtnClose
-@onready var btn_buy1 = $Control/ShopPanel/ItemsContainer/Item1/VBox/BtnBuy1
-@onready var btn_buy2 = $Control/ShopPanel/ItemsContainer/Item2/VBox/BtnBuy2
-@onready var btn_buy3 = $Control/ShopPanel/ItemsContainer/Item3/VBox/BtnBuy3
-@onready var btn_buy4 = $Control/ShopPanel/ItemsContainer/Item4/VBox/BtnBuy4
-@onready var item4_panel = $Control/ShopPanel/ItemsContainer/Item4
-@onready var btn_buy5 = $Control/ShopPanel/ItemsContainer/Item5/VBox/BtnBuy5
+@onready var shop_items_container = $Control/ShopPanel/ShopScroll/ItemsContainer
 @onready var btn_revive = $Control/GameOverScreen/VBox/BtnRevive
 @onready var btn_revive_spot = $Control/GameOverScreen/VBox/BtnReviveSpot
 @onready var shop_status_lbl = $Control/ShopPanel/ShopStatusLabel
@@ -54,6 +49,28 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 
 var player: CharacterBody2D = null
 var _is_ready = false
+
+var base_shop_items = [
+	{
+		"name": "治疗药水",
+		"cost": 15,
+		"data": {
+			"name": "Potion of Healing",
+			"type": "potion",
+			"hp_restore": 150.0,
+			"description": "Consumable. Restores 150 HP."
+		}
+	},
+	{
+		"name": "复活十字架",
+		"cost": 80,
+		"data": {
+			"name": "Ankh of Reincarnation",
+			"type": "ankh",
+			"description": "Auto-resurrects you on death."
+		}
+	}
+]
 
 func _ready():
 	await get_tree().process_frame
@@ -112,50 +129,12 @@ func _ready():
 
 	# Shop connections
 	btn_shop_close.pressed.connect(close_shop_ui)
-	btn_buy1.pressed.connect(func(): _on_buy_item_pressed("吸血之刃", 60, {
-		"name": "Vampiric Blade",
-		"type": "weapon",
-		"atk_bonus": 8.0,
-		"lifesteal_percent": 0.15,
-		"description": "+8 ATK, 15% Lifesteal."
-	}))
-	btn_buy2.pressed.connect(func(): _on_buy_item_pressed("防御板甲", 50, {
-		"name": "Plate Armor",
-		"type": "armor",
-		"def_bonus": 4.0,
-		"hp_bonus": 100.0,
-		"description": "+4 DEF, +100 Max HP."
-	}))
-	btn_buy3.pressed.connect(func(): _on_buy_item_pressed("治疗药水", 15, {
-		"name": "Potion of Healing",
-		"type": "potion",
-		"hp_restore": 150.0,
-		"description": "Consumable. Restores 150 HP."
-	}))
-	btn_buy4.pressed.connect(func(): _on_buy_item_pressed("游侠徽记", 120, {
-		"name": "Ranger's Crest",
-		"type": "crest",
-		"atk_bonus": 15.0,
-		"hp_bonus": 200.0,
-		"speed_bonus": 40.0,
-		"description": "+15 ATK, +200 HP, +40 Speed."
-	}))
-	btn_buy5.pressed.connect(func(): _on_buy_item_pressed("复活十字架", 80, {
-		"name": "Ankh of Reincarnation",
-		"type": "ankh",
-		"description": "Auto-resurrects you on death."
-	}))
 
 	if btn_revive:
 		btn_revive.pressed.connect(_on_revive_pressed)
 	if btn_revive_spot:
 		btn_revive_spot.pressed.connect(_on_revive_spot_pressed)
 
-	var scene_path = get_tree().current_scene.scene_file_path
-	if scene_path.contains("stage3"):
-		item4_panel.show()
-	else:
-		item4_panel.hide()
 	_is_ready = true
 
 func _process(delta):
@@ -229,6 +208,7 @@ func _on_xp_changed(xp, max_xp):
 
 func _on_level_up(new_level):
 	lvl_lbl.text = "LEVEL: %d" % new_level
+	_on_skills_changed()  # Refresh skill points counter and upgrade buttons
 	update_stats_display()
 	if _is_ready and player:
 		SaveSystem.save_game(player)
@@ -261,9 +241,22 @@ func _on_inventory_changed():
 		if item and not item.is_empty():
 			btn.text = get_item_emoji(item)
 			btn.tooltip_text = "%s\n%s" % [item.get("name"), item.get("description", "")]
+			# Color slots based on rarity grade
+			var grade = item.get("grade", "common")
+			if grade == "uncommon":
+				btn.modulate = Color(0.4, 1.0, 0.4)
+			elif grade == "rare":
+				btn.modulate = Color(0.4, 0.7, 1.0)
+			elif grade == "epic":
+				btn.modulate = Color(0.9, 0.4, 1.0)
+			elif grade == "legendary":
+				btn.modulate = Color(1.0, 0.7, 0.1)
+			else:
+				btn.modulate = Color(1.0, 1.0, 1.0)
 		else:
 			btn.text = ""
 			btn.tooltip_text = "Empty Slot"
+			btn.modulate = Color(1.0, 1.0, 1.0)
 	update_stats_display()
 
 func _on_skills_changed():
@@ -303,22 +296,47 @@ func update_stats_display():
 	agi_lbl.text = "AGI: %d" % agi_val
 	int_lbl.text = "INT: %d" % int_val
 
-func get_sell_price(item_name: String) -> int:
+func get_sell_price_for_item(item: Dictionary) -> int:
+	if item.has("cost"):
+		return int(floor(item.cost * 0.5))
+	
+	# Fallback based on name patterns
+	var item_name = item.get("name", "")
+	var base_cost = 50
+	
+	var grade = item.get("grade", "common")
+	if grade == "common":
+		base_cost = 40 * 0.4
+	elif grade == "uncommon":
+		base_cost = 40 * 1.5
+	elif grade == "rare":
+		base_cost = 40 * 2.0
+	elif grade == "epic":
+		base_cost = 40 * 3.0
+	elif grade == "legendary":
+		base_cost = 40 * 5.0
+		
 	if item_name.contains("Vampiric") or item_name.contains("吸血之刃"):
-		return 30
+		base_cost = 60
 	elif item_name.contains("Plate") or item_name.contains("防御板甲"):
-		return 25
-	elif item_name.contains("Boots") or item_name.contains("急速之靴"):
-		return 22
+		base_cost = 50
+	elif item_name.contains("Boots") or item_name.contains("急速之靴") or item_name.contains("Wild") or item_name.contains("野外软鞋"):
+		base_cost = 40
 	elif item_name.contains("Ranger") or item_name.contains("游侠徽记"):
-		return 60
-	elif item_name.contains("Ankh") or item_name.contains("复活"):
-		return 40
+		base_cost = 120
+	elif item_name.contains("Ankh") or item_name.contains("复活") or item_name.contains("Reincarnation"):
+		base_cost = 80
 	elif item_name.contains("Potion") or item_name.contains("治疗药水"):
-		return 7
-	elif item_name.contains("Claws") or item_name.contains("攻击之爪"):
-		return 15
-	return 10 # default fallback
+		base_cost = 15
+	elif item_name.contains("Claws") or item_name.contains("攻击之爪") or item_name.contains("钢爪"):
+		base_cost = 40
+		
+	# Apply common nerf to fallback equipment costs
+	if grade == "common" and not (item_name.contains("Potion") or item_name.contains("治疗药水")):
+		if base_cost > 15:
+			base_cost = base_cost * 0.4
+			
+	return int(floor(base_cost * 0.5))
 
 func _on_inventory_slot_pressed(slot_index):
 	if player:
@@ -328,7 +346,7 @@ func _on_inventory_slot_pressed(slot_index):
 				var item = inv[slot_index]
 				if item and not item.is_empty():
 					var item_name = item.get("name", "")
-					var sell_price = get_sell_price(item_name)
+					var sell_price = get_sell_price_for_item(item)
 					
 					# Give gold to player
 					player.set_gold(player.get_gold() + sell_price)
@@ -370,11 +388,43 @@ func _on_learn_skill(skill_name: String):
 		player.learn_skill(skill_name)
 		SaveSystem.save_game(player)
 
+func recycle_inventory_on_victory() -> void:
+	if not player: return
+	var inv = player.get_inventory()
+	var total_gold_gained = 0
+	var recycled_items = []
+	for i in range(inv.size()):
+		var item = inv[i]
+		if item and not item.is_empty():
+			var sell_price = get_sell_price_for_item(item)
+			total_gold_gained += sell_price
+			recycled_items.append(item.get("name", "Unknown"))
+			player.remove_from_inventory(i)
+	
+	if total_gold_gained > 0:
+		player.set_gold(player.get_gold() + total_gold_gained)
+		print("[Victory Recycle] Recycled items: ", recycled_items, " Gained gold: ", total_gold_gained)
+		_on_gold_changed(player.get_gold())
+		_on_inventory_changed()
+		
+		var main_scene = get_tree().current_scene
+		if main_scene and main_scene.has_method("spawn_floating_text"):
+			main_scene.call("spawn_floating_text", player.global_position + Vector2(0, -60), "💰 通关装备回收: +%d 金币！" % total_gold_gained, Color(0.9, 0.8, 0.15))
+
 func _on_victory():
+	recycle_inventory_on_victory()
 	victory_screen.show()
 	var current_scene = get_tree().current_scene.scene_file_path
 	var btn_restart = victory_screen.get_node("VBox/BtnRestart")
 	var label = victory_screen.get_node("VBox/Label")
+	
+	if player:
+		if current_scene.contains("main.tscn"):
+			SaveSystem.save_game(player, 2)
+		elif current_scene.contains("stage2.tscn"):
+			SaveSystem.save_game(player, 3)
+		else:
+			SaveSystem.save_game(player, 4)
 	
 	if current_scene.contains("main.tscn"):
 		btn_next_stage.show()
@@ -424,6 +474,7 @@ func _on_gold_changed(new_gold: int):
 func open_shop_ui(player_node):
 	if player_node:
 		player = player_node
+	populate_shop()
 	shop_panel.show()
 	shop_status_lbl.text = ""
 	if player:
@@ -535,3 +586,92 @@ func _on_revive_spot_pressed():
 		var main_scene = get_tree().current_scene
 		if main_scene and main_scene.has_method("spawn_floating_text"):
 			main_scene.call("spawn_floating_text", player.global_position + Vector2(0, -30), "👼 原地复活！", Color(0.15, 0.85, 1.0))
+
+func populate_shop():
+	# Clear existing dynamic items
+	for child in shop_items_container.get_children():
+		child.queue_free()
+		
+	# Build catalog: base items + unlocked shop items
+	var catalog = []
+	catalog.append_array(base_shop_items)
+	
+	for item in SaveSystem.unlocked_shop_items:
+		var found = false
+		for cat in catalog:
+			if cat.name == item.get("name", ""):
+				found = true
+				break
+		if not found:
+			catalog.append({
+				"name": item.get("name"),
+				"cost": item.get("cost", 50),
+				"data": item
+			})
+			
+	# Instantiate shop panels dynamically
+	for item in catalog:
+		var panel = Panel.new()
+		panel.custom_minimum_size = Vector2(150, 230)
+		
+		# Margin container for clean padding
+		var margin = MarginContainer.new()
+		margin.layout_mode = 1
+		margin.anchors_preset = Control.PRESET_FULL_RECT
+		margin.add_theme_constant_override("margin_left", 8)
+		margin.add_theme_constant_override("margin_right", 8)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_bottom", 8)
+		panel.add_child(margin)
+		
+		var vbox = VBoxContainer.new()
+		vbox.layout_mode = 2
+		vbox.add_theme_constant_override("separation", 8)
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		margin.add_child(vbox)
+		
+		# Name label
+		var name_lbl = Label.new()
+		name_lbl.text = item.name
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_lbl.add_theme_font_size_override("font_size", 12)
+		
+		# Color name label based on rarity grade
+		var grade = item.data.get("grade", "common")
+		if grade == "uncommon":
+			name_lbl.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
+		elif grade == "rare":
+			name_lbl.add_theme_color_override("font_color", Color(0.2, 0.6, 1.0))
+		elif grade == "epic":
+			name_lbl.add_theme_color_override("font_color", Color(0.8, 0.3, 1.0))
+		elif grade == "legendary":
+			name_lbl.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))
+		vbox.add_child(name_lbl)
+		
+		# Description label
+		var desc_lbl = Label.new()
+		desc_lbl.text = item.data.get("description", "")
+		desc_lbl.custom_minimum_size = Vector2(0, 80)
+		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_lbl.add_theme_font_size_override("font_size", 10)
+		desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+		vbox.add_child(desc_lbl)
+		
+		# Cost label
+		var cost_lbl = Label.new()
+		cost_lbl.text = "价格: %d 金币" % item.cost
+		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cost_lbl.add_theme_font_size_override("font_size", 11)
+		cost_lbl.add_theme_color_override("font_color", Color(0.9, 0.8, 0.15))
+		vbox.add_child(cost_lbl)
+		
+		# Buy button
+		var btn_buy = Button.new()
+		btn_buy.custom_minimum_size = Vector2(0, 32)
+		btn_buy.text = "购买"
+		btn_buy.pressed.connect(func(): _on_buy_item_pressed(item.name, item.cost, item.data))
+		vbox.add_child(btn_buy)
+		
+		shop_items_container.add_child(panel)

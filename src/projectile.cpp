@@ -54,6 +54,11 @@ void Projectile::_physics_process(double delta) {
         if (dist <= speed * delta) {
             // Hit!
             if (target->has_method("take_damage")) {
+                if (has_meta("is_crit") && (bool)get_meta("is_crit")) {
+                    if (actual_attacker) {
+                        actual_attacker->set_meta("last_hit_was_crit", true);
+                    }
+                }
                 target->call("take_damage", damage, actual_attacker);
             }
             queue_free();

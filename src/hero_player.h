@@ -110,6 +110,9 @@ public:
     void learn_skill(const String &skill_name);
     void upgrade_attribute(const String &attr_name);
     float get_lifesteal_percent() const;
+    float get_total_crit_chance() const;
+    float get_total_evasion_chance() const;
+    float get_total_block_amount() const;
     
     // Override stats calculations to include inventory/skill buffs
     float get_total_atk() const override;

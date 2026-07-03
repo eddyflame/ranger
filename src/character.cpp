@@ -161,24 +161,40 @@ float Character::get_total_move_speed() const {
 void Character::take_damage(float amount, Node* attacker) {
     if (is_dead) return;
     
-    // War3 armor formula: reduction = (armor * 0.06) / (1 + armor * 0.06)
-    // For simplicity, we use: actual = amount * (20 / (20 + total_def))
+    // Evasion check (only for characters with get_total_evasion_chance method)
+    if (has_method("get_total_evasion_chance")) {
+        float evade_chance = call("get_total_evasion_chance");
+        if (evade_chance > 0.0f && UtilityFunctions::randf() < evade_chance) {
+            set_meta("last_damage_status", "evaded");
+            emit_signal("damage_taken", 0.0f, attacker);
+            return;
+        }
+    }
+    
     float def = get_total_def();
     float multiplier = 1.0f;
     if (def >= 0) {
         multiplier = 20.0f / (20.0f + def);
     } else {
-        // Negative armor increases damage
         multiplier = 2.0f - (20.0f / (20.0f - def));
     }
     
     float actual_damage = amount * multiplier;
+    
+    // Block check (only for characters with get_total_block_amount method)
+    if (has_method("get_total_block_amount")) {
+        float block_amount = call("get_total_block_amount");
+        if (block_amount > 0.0f) {
+            actual_damage -= block_amount;
+            set_meta("last_damage_status", "blocked");
+        }
+    }
+    
     if (actual_damage < 0.0f) actual_damage = 0.0f;
     
     set_hp(hp - actual_damage);
     emit_signal("damage_taken", actual_damage, attacker);
     
-    // Apply lifesteal if the attacker has a get_lifesteal_percent method
     if (attacker && attacker->has_method("get_lifesteal_percent")) {
         float lifesteal_pct = attacker->call("get_lifesteal_percent");
         if (lifesteal_pct > 0.0f) {

@@ -98,6 +98,6 @@ position = Vector2(1025, 420)
 position = Vector2(1300, 425)
 
 [node name="Merchant" parent="." instance=ExtResource("9_merchant")]
-position = Vector2(725, 225)
+position = Vector2(100, 330)
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]

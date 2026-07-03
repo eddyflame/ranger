@@ -124,6 +124,6 @@ position = Vector2(900, 175)
 position = Vector2(1300, 425)
 
 [node name="Merchant" parent="." instance=ExtResource("7_merchant")]
-position = Vector2(1150, 425)
+position = Vector2(100, 330)
 
 [node name="HUD" parent="." instance=ExtResource("8_hud")]
