@@ -10,6 +10,7 @@ GameManager *GameManager::singleton = nullptr;
 void GameManager::_bind_methods() {
     ClassDB::bind_method(D_METHOD("trigger_victory"), &GameManager::trigger_victory);
     ClassDB::bind_method(D_METHOD("trigger_game_over"), &GameManager::trigger_game_over);
+    ClassDB::bind_method(D_METHOD("reset_game_state"), &GameManager::reset_game_state);
     ClassDB::bind_method(D_METHOD("get_is_victory"), &GameManager::get_is_victory);
     ClassDB::bind_method(D_METHOD("get_is_gameover"), &GameManager::get_is_gameover);
     ClassDB::bind_method(D_METHOD("restart_game"), &GameManager::restart_game);
@@ -59,9 +60,13 @@ void GameManager::trigger_game_over() {
     emit_signal("game_over");
 }
 
-void GameManager::restart_game() {
+void GameManager::reset_game_state() {
     is_victory = false;
     is_gameover = false;
+}
+
+void GameManager::restart_game() {
+    reset_game_state();
     get_tree()->reload_current_scene();
 }
 

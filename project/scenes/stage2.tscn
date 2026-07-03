@@ -1,0 +1,103 @@
+[gd_scene load_steps=9 format=3 uid="uid://dstage2"]
+
+[ext_resource type="Script" path="res://scenes/stage2.gd" id="1_stage2"]
+[ext_resource type="PackedScene" uid="uid://dplayer" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://denemy" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" uid="uid://drangedenemy" path="res://scenes/ranged_enemy.tscn" id="4_ranged"]
+[ext_resource type="PackedScene" uid="uid://dboss" path="res://scenes/boss.tscn" id="5_boss"]
+[ext_resource type="PackedScene" uid="uid://ditemdrop" path="res://scenes/item_drop.tscn" id="6_itemdrop"]
+[ext_resource type="PackedScene" uid="uid://dhud" path="res://scenes/hud.tscn" id="7_hud"]
+[ext_resource type="Texture2D" uid="uid://icon" path="res://icon.svg" id="8_icon"]
+[ext_resource type="PackedScene" uid="uid://dmerchant" path="res://scenes/merchant.tscn" id="9_merchant"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_2"]
+vertices = PackedVector2Array(0, 350, 500, 350, 500, 500, 0, 500, 350, 350, 350, 150, 500, 150, 950, 150, 950, 300, 500, 300, 1100, 150, 1100, 350, 950, 350, 1600, 350, 1600, 500, 950, 500)
+polygons = [PackedInt32Array(0, 4, 1, 2, 3), PackedInt32Array(4, 5, 6, 9, 1), PackedInt32Array(6, 7, 8, 9), PackedInt32Array(7, 10, 11, 12, 8), PackedInt32Array(12, 11, 13, 14, 15)]
+outlines = [PackedVector2Array(0, 350, 350, 350, 350, 150, 1100, 150, 1100, 350, 1600, 350, 1600, 500, 950, 500, 950, 300, 500, 300, 500, 500, 0, 500)]
+source_geometry_group_name = &"navigation_polygon_source_group"
+
+[node name="Stage2" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_stage2")
+
+[node name="GameManager" type="GameManager" parent="."]
+
+[node name="Background" type="Node2D" parent="."]
+z_index = -10
+
+[node name="Sprite2D" type="Sprite2D" parent="Background"]
+modulate = Color(0.12, 0.1, 0.15, 1)
+position = Vector2(800, 300)
+scale = Vector2(30, 10)
+texture = ExtResource("8_icon")
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_2")
+
+[node name="VisualPath" type="Line2D" parent="."]
+z_index = -5
+points = PackedVector2Array(100, 425, 425, 425, 425, 225, 725, 225, 1025, 225, 1025, 425, 1450, 425)
+width = 8.0
+default_color = Color(0.2, 0.25, 0.2, 0.5)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(100, 425)
+
+[node name="Enemy_Wolf1" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(300, 425)
+aggro_range = 140.0
+xp_reward = 40
+
+[node name="Enemy_Wolf2" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(700, 225)
+aggro_range = 140.0
+xp_reward = 45
+
+[node name="Enemy_Wolf3" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(1025, 425)
+aggro_range = 140.0
+xp_reward = 45
+
+[node name="Ranged_Spitter1" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(425, 300)
+aggro_range = 280.0
+attack_range = 240.0
+xp_reward = 55
+
+[node name="Ranged_Spitter2" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(900, 225)
+aggro_range = 280.0
+attack_range = 240.0
+xp_reward = 60
+
+[node name="Ranged_Spitter3" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(1025, 300)
+aggro_range = 280.0
+attack_range = 240.0
+xp_reward = 60
+
+[node name="Boss" parent="." instance=ExtResource("5_boss")]
+position = Vector2(1450, 425)
+character_name = "Ancient Golem (Boss)"
+level = 8
+strength = 50
+agility = 15
+intelligence = 20
+base_atk = 35.0
+base_def = 6.0
+move_speed = 100.0
+xp_reward = 400
+
+[node name="ItemDrop_Claws" parent="." instance=ExtResource("6_itemdrop")]
+position = Vector2(425, 220)
+
+[node name="ItemDrop_Boots" parent="." instance=ExtResource("6_itemdrop")]
+position = Vector2(1025, 420)
+
+[node name="ItemDrop_Potion" parent="." instance=ExtResource("6_itemdrop")]
+position = Vector2(1300, 425)
+
+[node name="Merchant" parent="." instance=ExtResource("9_merchant")]
+position = Vector2(725, 225)
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]

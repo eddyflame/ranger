@@ -177,6 +177,17 @@ void Character::take_damage(float amount, Node* attacker) {
     
     set_hp(hp - actual_damage);
     emit_signal("damage_taken", actual_damage, attacker);
+    
+    // Apply lifesteal if the attacker has a get_lifesteal_percent method
+    if (attacker && attacker->has_method("get_lifesteal_percent")) {
+        float lifesteal_pct = attacker->call("get_lifesteal_percent");
+        if (lifesteal_pct > 0.0f) {
+            float heal_amount = actual_damage * lifesteal_pct;
+            float current_hp = attacker->call("get_hp");
+            attacker->call("set_hp", current_hp + heal_amount);
+            attacker->emit_signal("healed", heal_amount);
+        }
+    }
 }
 
 void Character::heal(float amount) {

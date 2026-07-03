@@ -1,0 +1,128 @@
+[gd_scene load_steps=10 format=3 uid="uid://dstage3"]
+
+[ext_resource type="Script" path="res://scenes/stage3.gd" id="1_stage3"]
+[ext_resource type="PackedScene" uid="uid://dplayer" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://denemy" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" uid="uid://drangedenemy" path="res://scenes/ranged_enemy.tscn" id="4_ranged"]
+[ext_resource type="PackedScene" uid="uid://dboss" path="res://scenes/boss.tscn" id="5_boss"]
+[ext_resource type="PackedScene" uid="uid://ditemdrop" path="res://scenes/item_drop.tscn" id="6_itemdrop"]
+[ext_resource type="PackedScene" uid="uid://dmerchant" path="res://scenes/merchant.tscn" id="7_merchant"]
+[ext_resource type="PackedScene" uid="uid://dhud" path="res://scenes/hud.tscn" id="8_hud"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_2"]
+vertices = PackedVector2Array(0, 350, 600, 350, 600, 100, 1200, 100, 1200, 350, 1600, 350, 1600, 500, 1050, 500, 1050, 250, 750, 250, 750, 500, 600, 500, 0, 500)
+polygons = [PackedInt32Array(12, 0, 1, 11), PackedInt32Array(11, 1, 9, 10), PackedInt32Array(1, 2, 9), PackedInt32Array(2, 3, 8, 9), PackedInt32Array(8, 3, 4, 7), PackedInt32Array(9, 8, 7, 10), PackedInt32Array(7, 4, 5, 6)]
+outlines = [PackedVector2Array(0, 350, 600, 350, 600, 100, 1200, 100, 1200, 350, 1600, 350, 1600, 500, 1050, 500, 1050, 250, 750, 250, 750, 500, 600, 500, 0, 500)]
+source_geometry_group_name = &"navigation_polygon_source_group"
+
+[node name="Stage3" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_stage3")
+
+[node name="GameManager" type="GameManager" parent="."]
+
+[node name="Background" type="Node2D" parent="."]
+z_index = -10
+
+[node name="ColorRect" type="ColorRect" parent="Background"]
+offset_right = 1600.0
+offset_bottom = 600.0
+color = Color(0.04, 0.04, 0.06, 1)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_2")
+
+[node name="VisualPath" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(1, 1, 1, 0.1)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(100, 425)
+
+[node name="Enemy_Wolf1" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(450, 425)
+character_name = "Abyssal Wolf"
+level = 5
+strength = 20
+agility = 18
+base_atk = 18.0
+base_def = 3.0
+xp_reward = 80
+
+[node name="Enemy_Spitter1" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(675, 175)
+character_name = "Abyssal Spitter"
+level = 5
+strength = 14
+agility = 22
+base_atk = 16.0
+base_def = 1.5
+xp_reward = 90
+
+[node name="Enemy_Wolf2" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(900, 175)
+character_name = "Void Stalker"
+level = 6
+strength = 24
+agility = 20
+base_atk = 22.0
+base_def = 4.0
+xp_reward = 100
+
+[node name="Enemy_Spitter2" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(1125, 175)
+character_name = "Void Spitter"
+level = 6
+strength = 16
+agility = 24
+base_atk = 19.0
+base_def = 2.0
+xp_reward = 110
+
+[node name="Enemy_Wolf3" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(900, 375)
+character_name = "Void Stalker"
+level = 7
+strength = 28
+agility = 22
+base_atk = 26.0
+base_def = 4.5
+xp_reward = 120
+
+[node name="Enemy_Spitter3" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(900, 425)
+character_name = "Void Spitter"
+level = 7
+strength = 18
+agility = 26
+base_atk = 23.0
+base_def = 2.5
+xp_reward = 130
+
+[node name="Boss" parent="." instance=ExtResource("5_boss")]
+position = Vector2(1450, 425)
+character_name = "Abyssal Dragon (Boss)"
+level = 10
+strength = 60
+agility = 20
+intelligence = 30
+base_atk = 45.0
+base_def = 8.0
+move_speed = 110.0
+xp_reward = 600
+is_ranged = true
+attack_range = 300.0
+
+[node name="ItemDrop_Claws" parent="." instance=ExtResource("6_itemdrop")]
+position = Vector2(450, 425)
+
+[node name="ItemDrop_Boots" parent="." instance=ExtResource("6_itemdrop")]
+position = Vector2(900, 175)
+
+[node name="ItemDrop_Potion" parent="." instance=ExtResource("6_itemdrop")]
+position = Vector2(900, 375)
+
+[node name="Merchant" parent="." instance=ExtResource("7_merchant")]
+position = Vector2(1150, 425)
+
+[node name="HUD" parent="." instance=ExtResource("8_hud")]

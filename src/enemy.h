@@ -34,6 +34,7 @@ protected:
 
     int xp_reward = 25;
     TypedArray<Dictionary> loot_table;
+    bool is_ranged = false;
 
 public:
     Enemy();
@@ -41,6 +42,9 @@ public:
 
     void _ready() override;
     void _physics_process(double delta) override;
+
+    void set_is_ranged(bool p_ranged) { is_ranged = p_ranged; }
+    bool get_is_ranged() const { return is_ranged; }
 
     void set_aggro_range(float p_range) { aggro_range = p_range; }
     float get_aggro_range() const { return aggro_range; }

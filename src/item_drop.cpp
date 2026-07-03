@@ -2,6 +2,7 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/sprite2d.hpp>
+#include <godot_cpp/classes/polygon2d.hpp>
 
 namespace godot {
 
@@ -37,6 +38,19 @@ void ItemDrop::update_visuals() {
     Label *label = get_node<Label>("Label");
     if (label) {
         label->set_text(item_data.get("name", "Unknown Item"));
+    }
+    
+    Polygon2D *chest_base = get_node<Polygon2D>("Visual/ChestBase");
+    Polygon2D *chest_lid = get_node<Polygon2D>("Visual/ChestLid");
+    if (chest_base && chest_lid) {
+        String type = item_data.get("type", "");
+        if (type == "gold") {
+            chest_base->set_color(Color(0.9f, 0.75f, 0.15f, 1.0f));
+            chest_lid->set_color(Color(1.0f, 0.85f, 0.2f, 1.0f));
+        } else {
+            chest_base->set_color(Color(0.42f, 0.22f, 0.1f, 1.0f));
+            chest_lid->set_color(Color(0.52f, 0.28f, 0.12f, 1.0f));
+        }
     }
     
     // We can also swap Sprite2D texture if an icon path is provided

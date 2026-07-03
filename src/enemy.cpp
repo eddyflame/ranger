@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "hero_player.h"
 #include "item_drop.h"
+#include "projectile.h"
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
@@ -22,9 +23,13 @@ void Enemy::_bind_methods() {
     ClassDB::bind_method(D_METHOD("add_loot_item", "item"), &Enemy::add_loot_item);
     ClassDB::bind_method(D_METHOD("spawn_loot"), &Enemy::spawn_loot);
     
+    ClassDB::bind_method(D_METHOD("set_is_ranged", "ranged"), &Enemy::set_is_ranged);
+    ClassDB::bind_method(D_METHOD("get_is_ranged"), &Enemy::get_is_ranged);
+    
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "aggro_range"), "set_aggro_range", "get_aggro_range");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "attack_range"), "set_attack_range", "get_attack_range");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "xp_reward"), "set_xp_reward", "get_xp_reward");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_ranged"), "set_is_ranged", "get_is_ranged");
 }
 
 Enemy::Enemy() {
@@ -175,9 +180,28 @@ void Enemy::_physics_process(double delta) {
 }
 
 void Enemy::attack_player() {
-    if (target_node && target_node->has_method("take_damage")) {
-        float damage = get_total_atk();
-        target_node->call("take_damage", damage, this);
+    if (!target_node) return;
+    
+    if (is_ranged) {
+        Ref<PackedScene> proj_scene = ResourceLoader::get_singleton()->load("res://scenes/projectile.tscn");
+        if (proj_scene.is_valid()) {
+            Node *inst = proj_scene->instantiate();
+            Projectile *proj = Object::cast_to<Projectile>(inst);
+            if (proj) {
+                Vector2 dir = (target_node->get_global_position() - get_global_position()).normalized();
+                proj->set_global_position(get_global_position() + dir * 15.0f);
+                proj->set_target(target_node);
+                proj->set_attacker(this);
+                proj->set_damage(get_total_atk());
+                proj->set_speed(280.0f); // Spitter shoots slightly slower than player arrow
+                get_parent()->add_child(proj);
+            }
+        }
+    } else {
+        if (target_node->has_method("take_damage")) {
+            float damage = get_total_atk();
+            target_node->call("take_damage", damage, this);
+        }
     }
 }
 
@@ -218,6 +242,31 @@ void Enemy::die() {
     }
 
     spawn_loot();
+    
+    // Spawn gold coins!
+    int min_gold = 25;
+    int max_gold = 40;
+    if (get_name().contains("Boss")) {
+        min_gold = 100;
+        max_gold = 250;
+    }
+    
+    int gold_dropped = UtilityFunctions::randi_range(min_gold, max_gold);
+    Ref<PackedScene> gold_scene = ResourceLoader::get_singleton()->load("res://scenes/item_drop.tscn");
+    if (gold_scene.is_valid()) {
+        Node *inst = gold_scene->instantiate();
+        ItemDrop *drop = Object::cast_to<ItemDrop>(inst);
+        if (drop) {
+            Dictionary gold_data;
+            gold_data["name"] = "+" + String::num_int64(gold_dropped) + " 金币";
+            gold_data["type"] = "gold";
+            gold_data["amount"] = gold_dropped;
+            
+            drop->set_global_position(get_global_position() + Vector2(UtilityFunctions::randf_range(-15.0f, 15.0f), UtilityFunctions::randf_range(-15.0f, 15.0f)));
+            drop->set_item_data(gold_data);
+            get_parent()->add_child(drop);
+        }
+    }
     
     // Fade out and queue free
     queue_free();

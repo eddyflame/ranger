@@ -3,6 +3,8 @@
 #include "game_manager.h"
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/packed_scene.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
@@ -84,12 +86,19 @@ void Boss::cast_stomp() {
 }
 
 void Boss::die() {
-    Enemy::die();
+    Vector2 death_pos = get_global_position();
+    Enemy::die(); // Spawn loot and award XP
     
-    // Notify GameManager of boss defeat
-    GameManager *gm = GameManager::get_singleton();
-    if (gm) {
-        gm->trigger_victory();
+    // Spawn exit portal at boss death position
+    Ref<PackedScene> portal_scene = ResourceLoader::get_singleton()->load("res://scenes/exit_portal.tscn");
+    if (portal_scene.is_valid()) {
+        Node *inst = portal_scene->instantiate();
+        Node2D *portal = Object::cast_to<Node2D>(inst);
+        if (portal) {
+            portal->set_global_position(death_pos);
+            get_parent()->add_child(portal);
+            UtilityFunctions::print("[Boss Defeat] Spawning exit portal at boss death position: ", death_pos);
+        }
     }
 }
 

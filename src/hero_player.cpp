@@ -11,7 +11,13 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/packed_scene.hpp>
 #include <godot_cpp/classes/viewport.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
+#include <godot_cpp/classes/input_event_key.hpp>
+#include <godot_cpp/classes/navigation_server2d.hpp>
+#include <godot_cpp/classes/camera2d.hpp>
+#include <godot_cpp/classes/cpu_particles2d.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <cmath>
 
 namespace godot {
 
@@ -31,11 +37,32 @@ void HeroPlayer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("cast_skill_w"), &HeroPlayer::cast_skill_w);
     ClassDB::bind_method(D_METHOD("get_is_windwalking"), &HeroPlayer::get_is_windwalking);
     ClassDB::bind_method(D_METHOD("get_skill_w_cooldown"), &HeroPlayer::get_skill_w_cooldown);
+    ClassDB::bind_method(D_METHOD("get_skill_q_level"), &HeroPlayer::get_skill_q_level);
+    ClassDB::bind_method(D_METHOD("get_skill_w_level"), &HeroPlayer::get_skill_w_level);
+    ClassDB::bind_method(D_METHOD("get_skill_e_level"), &HeroPlayer::get_skill_e_level);
+    ClassDB::bind_method(D_METHOD("get_skill_e_cooldown"), &HeroPlayer::get_skill_e_cooldown);
+    ClassDB::bind_method(D_METHOD("cast_skill_e", "target_pos"), &HeroPlayer::cast_skill_e);
+    ClassDB::bind_method(D_METHOD("cast_skill_e_forward"), &HeroPlayer::cast_skill_e_forward);
     ClassDB::bind_method(D_METHOD("learn_skill", "skill_name"), &HeroPlayer::learn_skill);
+    ClassDB::bind_method(D_METHOD("upgrade_attribute", "attr_name"), &HeroPlayer::upgrade_attribute);
+    ClassDB::bind_method(D_METHOD("trigger_shake", "intensity", "duration"), &HeroPlayer::trigger_shake);
+    
+    ClassDB::bind_method(D_METHOD("get_gold"), &HeroPlayer::get_gold);
+    ClassDB::bind_method(D_METHOD("set_gold", "gold"), &HeroPlayer::set_gold);
+    ClassDB::bind_method(D_METHOD("get_lifesteal_percent"), &HeroPlayer::get_lifesteal_percent);
+    
+    ClassDB::bind_method(D_METHOD("set_xp", "xp"), &HeroPlayer::set_xp);
+    ClassDB::bind_method(D_METHOD("set_skill_points", "skill_points"), &HeroPlayer::set_skill_points);
+    ClassDB::bind_method(D_METHOD("set_inventory", "inventory"), &HeroPlayer::set_inventory);
+    ClassDB::bind_method(D_METHOD("set_skill_q_level", "level"), &HeroPlayer::set_skill_q_level);
+    ClassDB::bind_method(D_METHOD("set_skill_w_level", "level"), &HeroPlayer::set_skill_w_level);
+    ClassDB::bind_method(D_METHOD("set_skill_e_level", "level"), &HeroPlayer::set_skill_e_level);
 
     ClassDB::bind_method(D_METHOD("set_movement_target", "target"), &HeroPlayer::set_movement_target);
     ClassDB::bind_method(D_METHOD("set_attack_target", "target"), &HeroPlayer::set_attack_target);
     ClassDB::bind_method(D_METHOD("set_pickup_target", "target"), &HeroPlayer::set_pickup_target);
+    ClassDB::bind_method(D_METHOD("revive_at_start"), &HeroPlayer::revive_at_start);
+    ClassDB::bind_method(D_METHOD("revive_on_spot"), &HeroPlayer::revive_on_spot);
 
     // Signals
     ADD_SIGNAL(MethodInfo("inventory_changed"));
@@ -43,6 +70,11 @@ void HeroPlayer::_bind_methods() {
     ADD_SIGNAL(MethodInfo("skill_w_cooldown_started", PropertyInfo(Variant::FLOAT, "cooldown_time")));
     ADD_SIGNAL(MethodInfo("skills_changed"));
     ADD_SIGNAL(MethodInfo("xp_gained", PropertyInfo(Variant::INT, "amount")));
+    ADD_SIGNAL(MethodInfo("shot_projectile"));
+    ADD_SIGNAL(MethodInfo("gold_changed", PropertyInfo(Variant::INT, "gold")));
+    ADD_SIGNAL(MethodInfo("gold_gained", PropertyInfo(Variant::INT, "amount")));
+    ADD_SIGNAL(MethodInfo("blinked", PropertyInfo(Variant::VECTOR2, "from"), PropertyInfo(Variant::VECTOR2, "to")));
+    ADD_SIGNAL(MethodInfo("resurrected"));
 }
 
 HeroPlayer::HeroPlayer() {
@@ -58,6 +90,7 @@ HeroPlayer::HeroPlayer() {
     xp_to_next_level = 100;
     xp = 0;
     skill_points = 1; // Start with 1 skill point
+    gold = 0;
 
     // Initialize inventory with 6 empty slots
     inventory.resize(INVENTORY_SIZE);
@@ -86,6 +119,7 @@ void HeroPlayer::_ready() {
     // Set starting HP & MP to max
     set_hp(get_total_max_hp());
     set_mp(get_total_max_mp());
+    start_position = get_global_position();
 }
 
 void HeroPlayer::_physics_process(double delta) {
@@ -100,11 +134,47 @@ void HeroPlayer::_physics_process(double delta) {
     if (skill_w_cooldown > 0.0f) {
         skill_w_cooldown -= delta;
     }
+    if (skill_e_cooldown > 0.0f) {
+        skill_e_cooldown -= delta;
+    }
     if (is_windwalking) {
         skill_w_duration -= delta;
         if (skill_w_duration <= 0.0f) {
             is_windwalking = false;
             set_modulate(Color(1.0f, 1.0f, 1.0f, 1.0f)); // restore transparency
+        }
+    }
+
+    // Slowly regenerate mana: 1.0f + intelligence * 0.05f per second
+    float mana_regen = 1.0f + intelligence * 0.05f;
+    set_mp(mp + mana_regen * delta);
+
+    // Process camera shake
+    if (shake_duration > 0.0f) {
+        shake_duration -= delta;
+        Camera2D *cam = get_node<Camera2D>("Camera2D");
+        if (cam) {
+            if (shake_duration <= 0.0f) {
+                cam->set_offset(Vector2(0, 0));
+            } else {
+                float off_x = UtilityFunctions::randf_range(-shake_intensity, shake_intensity);
+                float off_y = UtilityFunctions::randf_range(-shake_intensity, shake_intensity);
+                cam->set_offset(Vector2(off_x, off_y));
+            }
+        }
+    }
+
+    // Process MoveParticles color and count modulation under Windwalk
+    CPUParticles2D *particles = get_node<CPUParticles2D>("MoveParticles");
+    if (particles) {
+        if (is_windwalking) {
+            particles->set_color(Color(0.2f, 0.9f, 0.6f, 0.6f));
+            particles->set_amount(24);
+            particles->set("scale_amount_max", 7.0f);
+        } else {
+            particles->set_color(Color(0.28f, 0.55f, 0.22f, 0.35f));
+            particles->set_amount(12);
+            particles->set("scale_amount_max", 5.0f);
         }
     }
 
@@ -154,17 +224,30 @@ void HeroPlayer::_physics_process(double delta) {
         }
     } else if (is_picking_up && target_node) {
         float dist = get_global_position().distance_to(target_node->get_global_position());
-        if (dist <= 30.0f) {
-            // Pick it up
+        float interact_dist = target_node->is_in_group("merchants") ? 60.0f : 30.0f;
+        if (dist <= interact_dist) {
+            // Pick it up / Interact
             set_velocity(Vector2(0, 0));
             is_moving_to_target = false;
             is_picking_up = false;
             
-            ItemDrop *item_drop = Object::cast_to<ItemDrop>(target_node);
-            if (item_drop) {
-                Dictionary item_data = item_drop->get_item_data();
-                if (add_to_inventory(item_data)) {
-                    item_drop->queue_free();
+            if (target_node->is_in_group("merchants")) {
+                target_node->call("open_shop", this);
+            } else {
+                ItemDrop *item_drop = Object::cast_to<ItemDrop>(target_node);
+                if (item_drop) {
+                    Dictionary item_data = item_drop->get_item_data();
+                    String item_type = item_data.get("type", "");
+                    if (item_type == "gold") {
+                        int amount = item_data.get("amount", 0);
+                        set_gold(gold + amount);
+                        emit_signal("gold_gained", amount);
+                        item_drop->queue_free();
+                    } else {
+                        if (add_to_inventory(item_data)) {
+                            item_drop->queue_free();
+                        }
+                    }
                 }
             }
             target_node = nullptr;
@@ -213,6 +296,24 @@ void HeroPlayer::_physics_process(double delta) {
 void HeroPlayer::_unhandled_input(const Ref<InputEvent> &event) {
     if (is_dead) return;
 
+    Ref<InputEventKey> key_event = event;
+    if (key_event.is_valid() && key_event->is_pressed() && !key_event->is_echo()) {
+        Key keycode = key_event->get_keycode();
+        if (keycode == KEY_Q) {
+            toggle_skill_q();
+            get_viewport()->set_input_as_handled();
+            return;
+        } else if (keycode == KEY_W) {
+            cast_skill_w();
+            get_viewport()->set_input_as_handled();
+            return;
+        } else if (keycode == KEY_E) {
+            cast_skill_e(get_global_mouse_position());
+            get_viewport()->set_input_as_handled();
+            return;
+        }
+    }
+
     Ref<InputEventMouseButton> mouse_btn = event;
     if (mouse_btn.is_valid() && mouse_btn->is_pressed() && mouse_btn->get_button_index() == MOUSE_BUTTON_RIGHT) {
         Vector2 mouse_pos = get_global_mouse_position();
@@ -235,13 +336,13 @@ void HeroPlayer::_unhandled_input(const Ref<InputEvent> &event) {
             Node *collider = Object::cast_to<Node>(result["collider"]);
             if (collider) {
                 Node2D *node2d = Object::cast_to<Node2D>(collider);
-                if (node2d && (node2d->is_in_group("enemies") || node2d->is_in_group("items"))) {
+                if (node2d && (node2d->is_in_group("enemies") || node2d->is_in_group("items") || node2d->is_in_group("merchants"))) {
                     clicked_node = node2d;
                     break;
                 }
                 
                 Node2D *parent = Object::cast_to<Node2D>(collider->get_parent());
-                if (parent && (parent->is_in_group("enemies") || parent->is_in_group("items"))) {
+                if (parent && (parent->is_in_group("enemies") || parent->is_in_group("items") || parent->is_in_group("merchants"))) {
                     clicked_node = parent;
                     break;
                 }
@@ -251,7 +352,7 @@ void HeroPlayer::_unhandled_input(const Ref<InputEvent> &event) {
         if (clicked_node) {
             if (clicked_node->is_in_group("enemies")) {
                 set_attack_target(clicked_node);
-            } else if (clicked_node->is_in_group("items")) {
+            } else if (clicked_node->is_in_group("items") || clicked_node->is_in_group("merchants")) {
                 set_pickup_target(clicked_node);
             }
         } else {
@@ -320,6 +421,7 @@ void HeroPlayer::shoot_projectile(Node2D *target, bool searing_shot) {
             proj->set_damage(dmg);
             proj->set_attacker(this);
             get_parent()->add_child(proj);
+            emit_signal("shot_projectile");
         }
     }
 }
@@ -469,13 +571,208 @@ void HeroPlayer::learn_skill(const String &skill_name) {
         skill_w_level++;
         skill_points--;
         emit_signal("skills_changed");
+    } else if (skill_name == "E" && skill_e_level < 4) {
+        skill_e_level++;
+        skill_points--;
+        emit_signal("skills_changed");
     }
 }
 
+void HeroPlayer::upgrade_attribute(const String &attr_name) {
+    if (skill_points <= 0) return;
+    
+    if (attr_name == "strength") {
+        strength++;
+        set_hp(hp + 20.0f); // Add 20 HP from strength
+    } else if (attr_name == "agility") {
+        agility++;
+        set_hp(hp); // Trigger recalculation/clamp
+    } else if (attr_name == "intelligence") {
+        intelligence++;
+        set_mp(mp + 15.0f); // Add 15 MP from intelligence
+    } else {
+        return; // Invalid attribute name
+    }
+    
+    skill_points--;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::cast_skill_e(Vector2 target_pos) {
+    if (skill_e_level <= 0 || skill_e_cooldown > 0.0f || hp <= 0.0f) return;
+    
+    float mana_cost = 20.0f;
+    if (mp < mana_cost) return;
+    
+    float max_range = 150.0f + 50.0f * skill_e_level;
+    Vector2 current_pos = get_global_position();
+    Vector2 diff = target_pos - current_pos;
+    float dist = diff.length();
+    
+    if (dist > max_range) {
+        target_pos = current_pos + diff.normalized() * max_range;
+    }
+    
+    RID map = get_world_2d()->get_navigation_map();
+    Vector2 walkable_pos = NavigationServer2D::get_singleton()->map_get_closest_point(map, target_pos);
+    
+    set_global_position(walkable_pos);
+    nav_agent->set_target_position(walkable_pos);
+    set_velocity(Vector2(0, 0));
+    
+    skill_e_cooldown = 12.0f - 2.0f * skill_e_level; // Cooldown: 10s, 8s, 6s, 4s
+    set_mp(mp - mana_cost);
+    
+    emit_signal("skills_changed");
+    emit_signal("blinked", current_pos, walkable_pos);
+}
+
+void HeroPlayer::cast_skill_e_forward() {
+    Vector2 dir = Vector2(std::cos(get_rotation()), std::sin(get_rotation())).normalized();
+    cast_skill_e(get_global_position() + dir * 150.0f);
+}
+
+void HeroPlayer::trigger_shake(float intensity, float duration) {
+    shake_intensity = intensity;
+    shake_duration = duration;
+}
+
+void HeroPlayer::set_gold(int p_gold) {
+    gold = p_gold;
+    emit_signal("gold_changed", gold);
+}
+
+float HeroPlayer::get_lifesteal_percent() const {
+    float lifesteal = 0.0f;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty()) {
+            lifesteal += (float)slot.get("lifesteal_percent", 0.0f);
+        }
+    }
+    return lifesteal;
+}
+
+float HeroPlayer::get_total_max_hp() const {
+    float bonus_hp = 0.0f;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty()) {
+            bonus_hp += (float)slot.get("hp_bonus", 0.0f);
+        }
+    }
+    return Character::get_total_max_hp() + bonus_hp;
+}
+
 void HeroPlayer::die() {
+    // Check if we have an Ankh of Reincarnation in our inventory
+    int ankh_slot = -1;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty() && (String)slot.get("type", "") == "ankh") {
+            ankh_slot = i;
+            break;
+        }
+    }
+
+    if (ankh_slot != -1) {
+        // Automatic item-based resurrection
+        remove_from_inventory(ankh_slot);
+        hp = get_total_max_hp();
+        mp = get_total_max_mp();
+        
+        emit_signal("hp_changed", 0.0f, hp, get_total_max_hp());
+        emit_signal("mp_changed", 0.0f, mp, get_total_max_mp());
+        emit_signal("resurrected");
+        
+        UtilityFunctions::print("[Resurrection] Ankh consumed. Player resurrected on spot!");
+        return;
+    }
+
+    // Normal death
     Character::die();
     set_velocity(Vector2(0, 0));
-    // Let GameManager handle player death screen
+}
+
+void HeroPlayer::revive_at_start() {
+    is_dead = false;
+    hp = get_total_max_hp();
+    mp = get_total_max_mp();
+    set_global_position(start_position);
+    if (nav_agent) {
+        nav_agent->set_target_position(start_position);
+    }
+    set_velocity(Vector2(0, 0));
+    is_moving_to_target = false;
+    is_attacking = false;
+    is_picking_up = false;
+    target_node = nullptr;
+    target_node_id_ = 0;
+    
+    emit_signal("hp_changed", 0.0f, hp, get_total_max_hp());
+    emit_signal("mp_changed", 0.0f, mp, get_total_max_mp());
+    emit_signal("skills_changed");
+    
+    UtilityFunctions::print("[Resurrection] Player revived at map start.");
+}
+
+void HeroPlayer::revive_on_spot() {
+    is_dead = false;
+    hp = get_total_max_hp();
+    mp = get_total_max_mp();
+    set_velocity(Vector2(0, 0));
+    is_moving_to_target = false;
+    is_attacking = false;
+    is_picking_up = false;
+    target_node = nullptr;
+    target_node_id_ = 0;
+    
+    emit_signal("hp_changed", 0.0f, hp, get_total_max_hp());
+    emit_signal("mp_changed", 0.0f, mp, get_total_max_mp());
+    emit_signal("skills_changed");
+    
+    UtilityFunctions::print("[Resurrection] Player revived on spot.");
+}
+
+void HeroPlayer::set_level(int p_level) {
+    Character::set_level(p_level);
+    xp_to_next_level = level * 100;
+    emit_signal("xp_changed", xp, xp_to_next_level);
+}
+
+void HeroPlayer::set_xp(int p_xp) {
+    xp = p_xp;
+    emit_signal("xp_changed", xp, xp_to_next_level);
+}
+
+void HeroPlayer::set_skill_points(int p_pts) {
+    skill_points = p_pts;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_inventory(const Array &p_inv) {
+    inventory.clear();
+    inventory.resize(INVENTORY_SIZE);
+    for (int i = 0; i < INVENTORY_SIZE && i < p_inv.size(); ++i) {
+        inventory[i] = p_inv[i];
+    }
+    recalculate_item_bonuses();
+    emit_signal("inventory_changed");
+}
+
+void HeroPlayer::set_skill_q_level(int p_lvl) {
+    skill_q_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_skill_w_level(int p_lvl) {
+    skill_w_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_skill_e_level(int p_lvl) {
+    skill_e_level = p_lvl;
+    emit_signal("skills_changed");
 }
 
 } // namespace godot

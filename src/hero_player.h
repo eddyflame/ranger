@@ -33,9 +33,9 @@ private:
     int xp_to_next_level = 100;
     int skill_points = 0;
 
-    // Inventory: 6 slots
+    // Inventory: 8 slots
     Array inventory;
-    static const int INVENTORY_SIZE = 6;
+    static const int INVENTORY_SIZE = 8;
 
     // Skill states
     bool skill_q_active = false; // Searing Arrows (Toggle)
@@ -50,6 +50,15 @@ private:
     float skill_w_mana_cost = 40.0f;
     bool is_windwalking = false;
 
+    float skill_e_cooldown = 0.0f; // Blink
+    int skill_e_level = 0;
+    
+    int gold = 0;
+    
+    float shake_intensity = 0.0f;
+    float shake_duration = 0.0f;
+    Vector2 start_position;
+
 protected:
     static void _bind_methods();
 
@@ -62,13 +71,19 @@ public:
     void _unhandled_input(const Ref<InputEvent> &event) override;
 
     // XP & Leveling
+    void set_level(int p_level) override;
     void add_xp(int p_xp);
     int get_xp() const { return xp; }
+    void set_xp(int p_xp);
     int get_xp_to_next_level() const { return xp_to_next_level; }
     int get_skill_points() const { return skill_points; }
+    void set_skill_points(int p_pts);
+    int get_gold() const { return gold; }
+    void set_gold(int p_gold);
 
     // Inventory methods
     Array get_inventory() const { return inventory; }
+    void set_inventory(const Array &p_inv);
     bool add_to_inventory(const Dictionary &item);
     void remove_from_inventory(int slot_index);
     void use_item(int slot_index);
@@ -80,15 +95,31 @@ public:
     void cast_skill_w();
     bool get_is_windwalking() const { return is_windwalking; }
     float get_skill_w_cooldown() const { return skill_w_cooldown; }
+    int get_skill_q_level() const { return skill_q_level; }
+    void set_skill_q_level(int p_lvl);
+    int get_skill_w_level() const { return skill_w_level; }
+    void set_skill_w_level(int p_lvl);
+    int get_skill_e_level() const { return skill_e_level; }
+    void set_skill_e_level(int p_lvl);
+    float get_skill_e_cooldown() const { return skill_e_cooldown; }
+    
+    void cast_skill_e(Vector2 target_pos);
+    void cast_skill_e_forward();
+    void trigger_shake(float intensity, float duration);
     
     void learn_skill(const String &skill_name);
+    void upgrade_attribute(const String &attr_name);
+    float get_lifesteal_percent() const;
     
     // Override stats calculations to include inventory/skill buffs
     float get_total_atk() const override;
+    float get_total_max_hp() const override;
     float get_total_def() const override;
     float get_total_move_speed() const override;
 
     void die() override;
+    void revive_at_start();
+    void revive_on_spot();
     
     // Target setters
     void set_movement_target(Vector2 target);

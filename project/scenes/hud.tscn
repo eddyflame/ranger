@@ -39,19 +39,89 @@ text = "LEVEL: 1"
 [node name="StatsLabel" type="Label" parent="Control/BottomBar/Panel"]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 40.0
+offset_top = 35.0
 offset_right = 350.0
-offset_bottom = 120.0
-text = "ATK: 10   DEF: 1.0
-力量(STR): 10  敏捷(AGI): 10  智力(INT): 10"
+offset_bottom = 58.0
+text = "ATK: 10   DEF: 1.0"
+
+[node name="AttrsContainer" type="HBoxContainer" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 62.0
+offset_right = 360.0
+offset_bottom = 97.0
+theme_override_constants/separation = 15
+
+[node name="StrContainer" type="HBoxContainer" parent="Control/BottomBar/Panel/AttrsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="StrLabel" type="Label" parent="Control/BottomBar/Panel/AttrsContainer/StrContainer"]
+layout_mode = 2
+text = "STR: 10"
+
+[node name="BtnStrPlus" type="Button" parent="Control/BottomBar/Panel/AttrsContainer/StrContainer"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 12
+text = "+"
+
+[node name="AgiContainer" type="HBoxContainer" parent="Control/BottomBar/Panel/AttrsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="AgiLabel" type="Label" parent="Control/BottomBar/Panel/AttrsContainer/AgiContainer"]
+layout_mode = 2
+text = "AGI: 10"
+
+[node name="BtnAgiPlus" type="Button" parent="Control/BottomBar/Panel/AttrsContainer/AgiContainer"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 12
+text = "+"
+
+[node name="IntContainer" type="HBoxContainer" parent="Control/BottomBar/Panel/AttrsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="IntLabel" type="Label" parent="Control/BottomBar/Panel/AttrsContainer/IntContainer"]
+layout_mode = 2
+text = "INT: 10"
+
+[node name="BtnIntPlus" type="Button" parent="Control/BottomBar/Panel/AttrsContainer/IntContainer"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 12
+text = "+"
+
+[node name="SkillPointsLabel" type="Label" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 100.0
+offset_right = 350.0
+offset_bottom = 123.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.2, 1)
+text = "可用点数: 1"
+
+[node name="GoldLabel" type="Label" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 118.0
+offset_right = 350.0
+offset_bottom = 138.0
+theme_override_colors/font_color = Color(0.95, 0.8, 0.15, 1)
+text = "金币: 0"
 
 [node name="HPBar" type="ProgressBar" parent="Control/BottomBar/Panel"]
 modulate = Color(1, 0, 0, 1)
 layout_mode = 0
-offset_left = 370.0
+offset_left = 365.0
 offset_top = 15.0
-offset_right = 670.0
-offset_top = 45.0
+offset_right = 605.0
+offset_bottom = 45.0
 value = 100.0
 show_percentage = false
 
@@ -69,10 +139,10 @@ vertical_alignment = 1
 [node name="MPBar" type="ProgressBar" parent="Control/BottomBar/Panel"]
 modulate = Color(0, 0, 1, 1)
 layout_mode = 0
-offset_left = 370.0
+offset_left = 365.0
 offset_top = 55.0
-offset_right = 670.0
-offset_top = 85.0
+offset_right = 605.0
+offset_bottom = 85.0
 value = 100.0
 show_percentage = false
 
@@ -90,10 +160,10 @@ vertical_alignment = 1
 [node name="XPBar" type="ProgressBar" parent="Control/BottomBar/Panel"]
 modulate = Color(0.8, 0.8, 0, 1)
 layout_mode = 0
-offset_left = 370.0
+offset_left = 365.0
 offset_top = 95.0
-offset_right = 670.0
-offset_top = 115.0
+offset_right = 605.0
+offset_bottom = 115.0
 value = 0.0
 show_percentage = false
 
@@ -114,63 +184,153 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -270.0
+offset_left = -310.0
 offset_top = 15.0
 offset_right = -15.0
 offset_bottom = -15.0
 grow_horizontal = 0
 grow_vertical = 2
-columns = 3
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 4
 
 [node name="Slot0" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
-custom_minimum_size = Vector2(80, 50)
+custom_minimum_size = Vector2(70, 45)
 layout_mode = 2
 text = "Empty"
 
 [node name="Slot1" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
-custom_minimum_size = Vector2(80, 50)
+custom_minimum_size = Vector2(70, 45)
 layout_mode = 2
 text = "Empty"
 
 [node name="Slot2" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
-custom_minimum_size = Vector2(80, 50)
+custom_minimum_size = Vector2(70, 45)
 layout_mode = 2
 text = "Empty"
 
 [node name="Slot3" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
-custom_minimum_size = Vector2(80, 50)
+custom_minimum_size = Vector2(70, 45)
 layout_mode = 2
 text = "Empty"
 
 [node name="Slot4" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
-custom_minimum_size = Vector2(80, 50)
+custom_minimum_size = Vector2(70, 45)
 layout_mode = 2
 text = "Empty"
 
 [node name="Slot5" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
-custom_minimum_size = Vector2(80, 50)
+custom_minimum_size = Vector2(70, 45)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot6" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(70, 45)
+layout_mode = 2
+text = "Empty"
+
+[node name="Slot7" type="Button" parent="Control/BottomBar/Panel/InventoryGrid"]
+custom_minimum_size = Vector2(70, 45)
 layout_mode = 2
 text = "Empty"
 
 [node name="Skills" type="HBoxContainer" parent="Control/BottomBar/Panel"]
 layout_mode = 0
-offset_left = 690.0
+offset_left = 620.0
 offset_top = 15.0
-offset_right = 870.0
-offset_top = 120.0
-theme_override_constants/separation = 10
+offset_right = 827.0
+offset_bottom = 120.0
+theme_override_constants/separation = 6
 
-[node name="BtnQ" type="Button" parent="Control/BottomBar/Panel/Skills"]
-custom_minimum_size = Vector2(80, 80)
+[node name="SlotQ" type="VBoxContainer" parent="Control/BottomBar/Panel/Skills"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnQPlus" type="Button" parent="Control/BottomBar/Panel/Skills/SlotQ"]
+custom_minimum_size = Vector2(65, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "+ 升级"
+
+[node name="BtnQ" type="Button" parent="Control/BottomBar/Panel/Skills/SlotQ"]
+custom_minimum_size = Vector2(65, 65)
 layout_mode = 2
 text = "Q
 Searing"
 
-[node name="BtnW" type="Button" parent="Control/BottomBar/Panel/Skills"]
-custom_minimum_size = Vector2(80, 80)
+[node name="SlotW" type="VBoxContainer" parent="Control/BottomBar/Panel/Skills"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnWPlus" type="Button" parent="Control/BottomBar/Panel/Skills/SlotW"]
+custom_minimum_size = Vector2(65, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "+ 升级"
+
+[node name="BtnW" type="Button" parent="Control/BottomBar/Panel/Skills/SlotW"]
+custom_minimum_size = Vector2(65, 65)
 layout_mode = 2
 text = "W
 Windwalk"
+
+[node name="SlotE" type="VBoxContainer" parent="Control/BottomBar/Panel/Skills"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnEPlus" type="Button" parent="Control/BottomBar/Panel/Skills/SlotE"]
+custom_minimum_size = Vector2(65, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "+ 升级"
+
+[node name="BtnE" type="Button" parent="Control/BottomBar/Panel/Skills/SlotE"]
+custom_minimum_size = Vector2(65, 65)
+layout_mode = 2
+text = "E
+Blink"
+
+[node name="BossHPBar" type="PanelContainer" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 50.0
+offset_right = 200.0
+offset_bottom = 95.0
+grow_horizontal = 2
+
+[node name="VBox" type="VBoxContainer" parent="Control/BossHPBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="BossNameLabel" type="Label" parent="Control/BossHPBar/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.25, 0.25, 1)
+theme_override_font_sizes/font_size = 13
+text = "BOSS: NAME"
+horizontal_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="Control/BossHPBar/VBox"]
+modulate = Color(1, 0.1, 0.1, 1)
+custom_minimum_size = Vector2(0, 15)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="Control/BossHPBar/VBox/HPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 11
+text = "HP: 1000 / 1000"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="GameOverScreen" type="ColorRect" parent="Control"]
 visible = false
@@ -204,11 +364,30 @@ theme_override_font_sizes/font_size = 40
 text = "GAME OVER"
 horizontal_alignment = 1
 
-[node name="BtnRestart" type="Button" parent="Control/GameOverScreen/VBox"]
-custom_minimum_size = Vector2(150, 40)
+[node name="BtnReviveSpot" type="Button" parent="Control/GameOverScreen/VBox"]
+custom_minimum_size = Vector2(180, 40)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Restart Level"
+theme_override_colors/font_color = Color(0.15, 0.85, 1.0, 1.0)
+text = "原地复活 (Keep Stats)"
+
+[node name="BtnRevive" type="Button" parent="Control/GameOverScreen/VBox"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "起点复活 (Keep Stats)"
+
+[node name="BtnRestart" type="Button" parent="Control/GameOverScreen/VBox"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "重玩本关 (Reset Stats)"
+
+[node name="BtnMenu" type="Button" parent="Control/GameOverScreen/VBox"]
+custom_minimum_size = Vector2(180, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "返回主菜单"
 
 [node name="VictoryScreen" type="ColorRect" parent="Control"]
 visible = false
@@ -242,11 +421,326 @@ theme_override_font_sizes/font_size = 40
 text = "VICTORY!"
 horizontal_alignment = 1
 
+[node name="BtnNextStage" type="Button" parent="Control/VictoryScreen/VBox"]
+visible = false
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Next Stage"
+
 [node name="BtnRestart" type="Button" parent="Control/VictoryScreen/VBox"]
 custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play Again"
+
+[node name="BtnMenu" type="Button" parent="Control/VictoryScreen/VBox"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "返回主菜单"
+
+[node name="ShopPanel" type="ColorRect" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -180.0
+offset_right = 440.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.08, 0.1, 0.92)
+
+[node name="Title" type="Label" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 15.0
+offset_right = 150.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 20
+text = "神秘商店 (Mystic Shop)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShopGoldLabel" type="Label" parent="Control/ShopPanel"]
+layout_mode = 1
+offset_left = 30.0
+offset_top = 20.0
+offset_right = 180.0
+offset_bottom = 43.0
+theme_override_colors/font_color = Color(0.95, 0.8, 0.15, 1)
+text = "您的金币: 0"
+
+[node name="BtnClose" type="Button" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -45.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = 45.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 14
+text = "X"
+
+[node name="ShopStatusLabel" type="Label" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -32.0
+offset_right = 200.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.25, 0.25, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ItemsContainer" type="HBoxContainer" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -90.0
+offset_right = 420.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Item1" type="Panel" parent="Control/ShopPanel/ItemsContainer"]
+custom_minimum_size = Vector2(155, 230)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Control/ShopPanel/ItemsContainer/Item1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="Control/ShopPanel/ItemsContainer/Item1/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.5, 0.1, 1)
+theme_override_font_sizes/font_size = 14
+text = "吸血之刃"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="Control/ShopPanel/ItemsContainer/Item1/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "攻击力 +8\n普通攻击获得\n15% 生命吸血效果"
+autowrap_mode = 2
+
+[node name="Cost" type="Label" parent="Control/ShopPanel/ItemsContainer/Item1/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "价格: 60 金币"
+horizontal_alignment = 1
+
+[node name="BtnBuy1" type="Button" parent="Control/ShopPanel/ItemsContainer/Item1/VBox"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+text = "购买"
+
+[node name="Item2" type="Panel" parent="Control/ShopPanel/ItemsContainer"]
+custom_minimum_size = Vector2(155, 230)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Control/ShopPanel/ItemsContainer/Item2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="Control/ShopPanel/ItemsContainer/Item2/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.7, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+text = "防御板甲"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="Control/ShopPanel/ItemsContainer/Item2/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "防御力 +4\n最大生命值 +100\n坚实的前排防具"
+autowrap_mode = 2
+
+[node name="Cost" type="Label" parent="Control/ShopPanel/ItemsContainer/Item2/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "价格: 50 金币"
+horizontal_alignment = 1
+
+[node name="BtnBuy2" type="Button" parent="Control/ShopPanel/ItemsContainer/Item2/VBox"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+text = "购买"
+
+[node name="Item3" type="Panel" parent="Control/ShopPanel/ItemsContainer"]
+custom_minimum_size = Vector2(155, 230)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Control/ShopPanel/ItemsContainer/Item3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="Control/ShopPanel/ItemsContainer/Item3/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "治疗药水"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="Control/ShopPanel/ItemsContainer/Item3/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "消耗品\n使用后瞬间恢复\n150点生命值"
+autowrap_mode = 2
+
+[node name="Cost" type="Label" parent="Control/ShopPanel/ItemsContainer/Item3/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "价格: 15 金币"
+horizontal_alignment = 1
+
+[node name="BtnBuy3" type="Button" parent="Control/ShopPanel/ItemsContainer/Item3/VBox"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+text = "购买"
+
+[node name="Item4" type="Panel" parent="Control/ShopPanel/ItemsContainer"]
+custom_minimum_size = Vector2(155, 230)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Control/ShopPanel/ItemsContainer/Item4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="Control/ShopPanel/ItemsContainer/Item4/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.25, 0.25, 1)
+theme_override_font_sizes/font_size = 14
+text = "游侠徽记"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="Control/ShopPanel/ItemsContainer/Item4/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "终极神装\n+15 攻击，+200 生命\n外加 +40 移动速度"
+autowrap_mode = 2
+
+[node name="Cost" type="Label" parent="Control/ShopPanel/ItemsContainer/Item4/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "价格: 120 金币"
+horizontal_alignment = 1
+
+[node name="BtnBuy4" type="Button" parent="Control/ShopPanel/ItemsContainer/Item4/VBox"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+text = "购买"
+
+[node name="Item5" type="Panel" parent="Control/ShopPanel/ItemsContainer"]
+custom_minimum_size = Vector2(155, 230)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Control/ShopPanel/ItemsContainer/Item5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="Control/ShopPanel/ItemsContainer/Item5/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.35, 1.0, 1)
+theme_override_font_sizes/font_size = 14
+text = "复活十字架"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="Control/ShopPanel/ItemsContainer/Item5/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "复活十字架\n携带时若生命归零\n将在原地满状态复活"
+autowrap_mode = 2
+
+[node name="Cost" type="Label" parent="Control/ShopPanel/ItemsContainer/Item5/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "价格: 80 金币"
+horizontal_alignment = 1
+
+[node name="BtnBuy5" type="Button" parent="Control/ShopPanel/ItemsContainer/Item5/VBox"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+text = "购买"
 
 [node name="Instructions" type="PanelContainer" parent="Control"]
 layout_mode = 1

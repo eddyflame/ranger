@@ -28,6 +28,7 @@ public:
 
     void trigger_victory();
     void trigger_game_over();
+    void reset_game_state();
     
     bool get_is_victory() const { return is_victory; }
     bool get_is_gameover() const { return is_gameover; }

@@ -39,7 +39,7 @@ public:
     void set_character_name(const String &p_name) { character_name = p_name; }
     String get_character_name() const { return character_name; }
 
-    void set_level(int p_level);
+    virtual void set_level(int p_level);
     int get_level() const { return level; }
 
     void set_hp(float p_hp);

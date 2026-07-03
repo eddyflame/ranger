@@ -6,27 +6,30 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var claw_item = $ItemDrop_Claws
 @onready var boots_item = $ItemDrop_Boots
 @onready var potion_item = $ItemDrop_Potion
-@onready var wolf1 = $Enemy_Wolf1
-@onready var wolf2 = $Enemy_Wolf2
-@onready var wolf3 = $Enemy_Wolf3
 @onready var player = $Player
 
-# Static road outlines to prevent get_outline count out of bounds crashes
+# S-shaped road outlines
 var OUTLINE_POINTS := PackedVector2Array([
-	Vector2(0, 150), Vector2(400, 150), Vector2(400, 250), Vector2(600, 250),
-	Vector2(600, 100), Vector2(1000, 100), Vector2(1000, 250), Vector2(1200, 250),
-	Vector2(1200, 150), Vector2(1600, 150), Vector2(1600, 450), Vector2(1200, 450),
-	Vector2(1200, 350), Vector2(1000, 350), Vector2(1000, 500), Vector2(600, 500),
-	Vector2(600, 350), Vector2(400, 350), Vector2(400, 450), Vector2(0, 450)
+	Vector2(0, 350), Vector2(350, 350), Vector2(350, 150), Vector2(1100, 150),
+	Vector2(1100, 350), Vector2(1600, 350), Vector2(1600, 500), Vector2(950, 500),
+	Vector2(950, 300), Vector2(500, 300), Vector2(500, 500), Vector2(0, 500)
 ])
 
 func _ready():
-	SaveSystem.delete_save()
-	print("--- MAIN READY: PRINTING CHILDREN ---")
-	for child in get_children():
-		print("Child Name: ", child.name, " | Class: ", child.get_class(), " | Position: ", child.position if child is Node2D else "N/A")
-	print("-------------------------------------")
-	
+	if player:
+		if not SaveSystem.load_game(player):
+			# Baseline stats for starting Stage 2 directly
+			player.set_level(3)
+			player.set_skill_points(2)
+			player.set_gold(100)
+			var starter_inv = [
+				{"name": "Claws of Attack +6", "type": "weapon", "atk_bonus": 6.0, "description": "Increases Attack Power by 6."},
+				{"name": "Potion of Healing", "type": "potion", "hp_restore": 150.0, "description": "Consumable. Restores 150 HP."},
+				{}, {}, {}, {}, {}, {}
+			]
+			player.set_inventory(starter_inv)
+			player.set_hp(player.get_total_max_hp())
+			player.set_mp(player.get_total_max_mp())
 	# 1. Draw ground road visuals matching path
 	create_road_visual()
 	
@@ -60,14 +63,12 @@ func _ready():
 	if potion_item:
 		potion_item.set_item_data(potion_data)
 		
-	# Configure wolf loot tables (chance to drop on death)
-	if wolf1:
-		wolf1.add_loot_item(potion_data)
-	if wolf2:
-		wolf2.add_loot_item(claws_data)
-	if wolf3:
-		wolf3.add_loot_item(potion_data)
-		
+	# Configure any specific creep loot tables if needed
+	for child in get_children():
+		if child.is_in_group("enemies") and child.name != "Boss":
+			# 30% chance to drop a healing potion on death
+			child.add_loot_item(potion_data)
+
 	# 4. Connect signals for all Character children (for damage / healing floating numbers)
 	for child in get_children():
 		if child.has_signal("damage_taken"):
@@ -77,6 +78,8 @@ func _ready():
 		if child.has_signal("boss_stomped"):
 			child.connect("boss_stomped", Callable(self, "_on_boss_stomped").bind(child))
 			
+	# Connect XP gained on player
+	# Connect XP gained on player
 	# Connect XP, gold, shoot, blink, level up signals on player
 	if player:
 		if player.has_signal("xp_gained"):
@@ -93,18 +96,15 @@ func _ready():
 		if player.has_signal("died"):
 			player.connect("died", Callable(self, "_on_player_died"))
 
-
 func _on_player_died():
 	var gm = get_node_or_null("GameManager")
 	if gm:
 		gm.trigger_game_over()
-	
-
 
 func create_road_visual():
 	var road = Polygon2D.new()
 	road.polygon = OUTLINE_POINTS
-	road.color = Color(0.18, 0.16, 0.13, 1.0) # Sleek modern dark road gravel
+	road.color = Color(0.15, 0.18, 0.14, 1.0) # slightly mossier green-gravel road for Stage 2
 	road.z_index = -8
 	add_child(road)
 	
@@ -114,7 +114,7 @@ func create_road_visual():
 	# Close the line path loop
 	road_border.add_point(OUTLINE_POINTS[0])
 	road_border.width = 3.0
-	road_border.default_color = Color(0.24, 0.22, 0.18, 1.0)
+	road_border.default_color = Color(0.20, 0.24, 0.19, 1.0)
 	road_border.z_index = -7
 	add_child(road_border)
 

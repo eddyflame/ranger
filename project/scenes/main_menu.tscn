@@ -1,0 +1,217 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmainmenu"]
+
+[ext_resource type="Script" path="res://scenes/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.06, 0.08, 1)
+
+[node name="Decorations" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AmbientGlow" type="CPUParticles2D" parent="Decorations"]
+position = Vector2(576, 324)
+amount = 12
+lifetime = 3.0
+emission_shape = 3
+emission_rect_extents = Vector2(500, 250)
+gravity = Vector2(0, -5)
+scale_amount_min = 2.0
+scale_amount_max = 6.0
+color = Color(0.2, 0.5, 0.3, 0.15)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="TitleBox" type="VBoxContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="CenterContainer/VBox/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 46
+text = "游 侠 之 路"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="CenterContainer/VBox/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.6, 0.5, 0.8)
+theme_override_font_sizes/font_size = 13
+text = "R A N G E R ' S   P A T H"
+horizontal_alignment = 1
+
+[node name="LevelSelectRow" type="HBoxContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="CardStage1" type="PanelContainer" parent="CenterContainer/VBox/LevelSelectRow"]
+custom_minimum_size = Vector2(220, 220)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/VBox/LevelSelectRow/CardStage1"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Header" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage1/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.7, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "第一关"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage1/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "荒野猎魔"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage1/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "狼群出没之地
+推荐等级: 1级"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnStart1" type="Button" parent="CenterContainer/VBox/LevelSelectRow/CardStage1/VBox"]
+custom_minimum_size = Vector2(140, 35)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "进入关卡"
+
+[node name="CardStage2" type="PanelContainer" parent="CenterContainer/VBox/LevelSelectRow"]
+custom_minimum_size = Vector2(220, 220)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/VBox/LevelSelectRow/CardStage2"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Header" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage2/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "第二关"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage2/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "废墟突围"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage2/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "剧毒裂口者守护通道
+推荐等级: 3级"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnStart2" type="Button" parent="CenterContainer/VBox/LevelSelectRow/CardStage2/VBox"]
+custom_minimum_size = Vector2(140, 35)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "进入关卡"
+
+[node name="CardStage3" type="PanelContainer" parent="CenterContainer/VBox/LevelSelectRow"]
+custom_minimum_size = Vector2(220, 220)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/VBox/LevelSelectRow/CardStage3"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Header" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.45, 1.0, 1)
+theme_override_font_sizes/font_size = 14
+text = "第三关"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "深渊决战"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "迎击深渊黑龙
+推荐等级: 6级"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnStart3" type="Button" parent="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox"]
+custom_minimum_size = Vector2(140, 35)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "进入关卡"
+
+[node name="BottomRow" type="VBoxContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnContinue" type="Button" parent="CenterContainer/VBox/BottomRow"]
+custom_minimum_size = Vector2(300, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_hover_color = Color(0.95, 0.8, 0.2, 1)
+text = "继续上次游戏"
+
+[node name="BtnQuit" type="Button" parent="CenterContainer/VBox/BottomRow"]
+custom_minimum_size = Vector2(150, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "退出游戏"
+
+[connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage1/VBox/BtnStart1" to="." method="_on_stage1_pressed"]
+[connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage2/VBox/BtnStart2" to="." method="_on_stage2_pressed"]
+[connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox/BtnStart3" to="." method="_on_stage3_pressed"]
+[connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnContinue" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnQuit" to="." method="_on_quit_pressed"]
