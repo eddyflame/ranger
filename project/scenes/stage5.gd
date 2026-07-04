@@ -206,13 +206,7 @@ func _on_enemy_died(enemy_node):
 			SaveSystem.spawn_loot_drop(self, death_pos + scatter, loot)
 			SaveSystem.register_unlocked_item(loot)
 			
-		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 最终魔王已伏诛！游戏通关！", Color(1.0, 0.85, 0.15))
-		
-		var delay_timer = get_tree().create_timer(6.0)
-		delay_timer.timeout.connect(func():
-			var gm = get_node_or_null("GameManager")
-			if gm: gm.trigger_victory()
-		)
+		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 最终魔王已伏诛！最终通关传送门已开启", Color(1.0, 0.85, 0.15))
 	else:
 		var loot = SaveSystem.generate_graded_loot(false)
 		SaveSystem.spawn_loot_drop(self, death_pos, loot)
@@ -234,14 +228,14 @@ func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
 		if attacker and attacker.has_meta("last_hit_was_crit") and attacker.get_meta("last_hit_was_crit"):
 			attacker.remove_meta("last_hit_was_crit")
 			color = Color(1.0, 0.15, 0.15)
-			text_prefix = "暴击 "
+			text_prefix = TranslationManager.t("ALERT_CRIT")
 			if victim == player:
 				player.call("trigger_shake", 12.0, 0.3)
 			else:
 				if player: player.call("trigger_shake", 8.0, 0.2)
 
 		spawn_floating_text(victim.global_position + Vector2(randf_range(-15, 15), -45), "%s-%d" % [text_prefix, int(amount)], color)
-		if text_prefix == "暴击 ":
+		if text_prefix == TranslationManager.t("ALERT_CRIT"):
 			SynthAudio.play_crit(self)
 		else:
 			SynthAudio.play_hit(self)
@@ -272,7 +266,7 @@ func _on_player_blinked(from_pos: Vector2, to_pos: Vector2):
 		add_child(bp2)
 	SynthAudio.play_shoot(self)
 
-func _on_player_level_up():
+func _on_player_level_up(new_level: int):
 	if player:
 		spawn_floating_text(player.global_position + Vector2(0, -85), "✨ LEVEL UP!! ✨", Color(0.2, 0.9, 0.9))
 		var lvl_up_p = load("res://scenes/level_up_particles.tscn")

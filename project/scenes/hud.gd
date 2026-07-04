@@ -165,6 +165,8 @@ func _ready():
 		tween.tween_property(fade, "color:a", 0.0, 0.6)
 		tween.tween_callback(fade.hide)
 
+	TranslationManager.locale_changed.connect(refresh_translations)
+	refresh_translations()
 	_is_ready = true
 
 func _process(delta):
@@ -172,16 +174,16 @@ func _process(delta):
 		# Q Skill Text & Status (Searing Arrows)
 		var lvl_q = player.get_skill_q_level()
 		if lvl_q == 0:
-			btn_q.text = "Q\n未学习"
+			btn_q.text = "Q\n" + TranslationManager.t("SKILL_NOT_LEARNED")
 			btn_q.disabled = true
 		else:
-			btn_q.text = "Q\n炽热箭\n(Lv %d)" % lvl_q
+			btn_q.text = "Q\n" + TranslationManager.t("SKILL_Q_NAME") + "\n(Lv %d)" % lvl_q
 			btn_q.disabled = false
 			
 		# W Skill Text & Status (Windwalk)
 		var lvl_w = player.get_skill_w_level()
 		if lvl_w == 0:
-			btn_w.text = "W\n未学习"
+			btn_w.text = "W\n" + TranslationManager.t("SKILL_NOT_LEARNED")
 			btn_w.disabled = true
 		else:
 			var cd = player.get_skill_w_cooldown()
@@ -189,13 +191,13 @@ func _process(delta):
 				btn_w.text = "W\nCD: %.1f\n(Lv %d)" % [cd, lvl_w]
 				btn_w.disabled = true
 			else:
-				btn_w.text = "W\n疾风步\n(Lv %d)" % lvl_w
+				btn_w.text = "W\n" + TranslationManager.t("SKILL_W_NAME") + "\n(Lv %d)" % lvl_w
 				btn_w.disabled = false
 				
 		# E Skill Text & Status (Blink)
 		var lvl_e = player.get_skill_e_level()
 		if lvl_e == 0:
-			btn_e.text = "E\n未学习"
+			btn_e.text = "E\n" + TranslationManager.t("SKILL_NOT_LEARNED")
 			btn_e.disabled = true
 		else:
 			var cd = player.get_skill_e_cooldown()
@@ -203,13 +205,13 @@ func _process(delta):
 				btn_e.text = "E\nCD: %.1f\n(Lv %d)" % [cd, lvl_e]
 				btn_e.disabled = true
 			else:
-				btn_e.text = "E\n闪烁\n(Lv %d)" % lvl_e
+				btn_e.text = "E\n" + TranslationManager.t("SKILL_E_NAME") + "\n(Lv %d)" % lvl_e
 				btn_e.disabled = false
 
 		# R Skill Text & Status (Arrow Rain)
 		var lvl_r = player.get_skill_r_level()
 		if lvl_r == 0:
-			btn_r.text = "R\n未学习"
+			btn_r.text = "R\n" + TranslationManager.t("SKILL_NOT_LEARNED")
 			btn_r.disabled = true
 		else:
 			var cd = player.get_skill_r_cooldown()
@@ -217,7 +219,7 @@ func _process(delta):
 				btn_r.text = "R\nCD: %.1f\n(Lv %d)" % [cd, lvl_r]
 				btn_r.disabled = true
 			else:
-				btn_r.text = "R\n箭雨\n(Lv %d)" % lvl_r
+				btn_r.text = "R\n" + TranslationManager.t("SKILL_R_NAME") + "\n(Lv %d)" % lvl_r
 				btn_r.disabled = false
 
 	# Dynamic Boss HP Bar
@@ -323,7 +325,7 @@ func _on_skills_changed():
 		
 	# Upgrade buttons visibility logic based on skill points
 	var pts = player.get_skill_points()
-	skill_pts_lbl.text = "可用点数: %d" % pts
+	skill_pts_lbl.text = TranslationManager.t("HUD_SKILL_POINTS") + str(pts)
 	
 	var can_upgrade = pts > 0
 	btn_str_plus.visible = can_upgrade
@@ -493,27 +495,27 @@ func _on_victory():
 	
 	if current_scene.contains("main.tscn"):
 		btn_next_stage.show()
-		btn_next_stage.text = "进入第二关 (Stage 2)"
-		btn_restart.text = "重玩本关 (Replay)"
+		btn_next_stage.text = TranslationManager.t("MENU_STAGE_ENTER") + ": " + TranslationManager.t("STAGE_2")
+		btn_restart.text = TranslationManager.t("HUD_PLAY_AGAIN")
 	elif current_scene.contains("stage2.tscn"):
 		btn_next_stage.show()
-		btn_next_stage.text = "进入第三关 (Stage 3)"
-		btn_restart.text = "重玩本关 (Replay)"
+		btn_next_stage.text = TranslationManager.t("MENU_STAGE_ENTER") + ": " + TranslationManager.t("STAGE_3")
+		btn_restart.text = TranslationManager.t("HUD_PLAY_AGAIN")
 	elif current_scene.contains("stage3.tscn"):
 		btn_next_stage.show()
-		btn_next_stage.text = "进入第四关 (Stage 4)"
-		btn_restart.text = "重玩本关 (Replay)"
+		btn_next_stage.text = TranslationManager.t("MENU_STAGE_ENTER") + ": " + TranslationManager.t("STAGE_4")
+		btn_restart.text = TranslationManager.t("HUD_PLAY_AGAIN")
 	elif current_scene.contains("stage4.tscn"):
 		btn_next_stage.show()
-		btn_next_stage.text = "进入最终关 (Stage 5)"
-		btn_restart.text = "重玩本关 (Replay)"
+		btn_next_stage.text = TranslationManager.t("MENU_STAGE_ENTER") + ": " + TranslationManager.t("STAGE_5")
+		btn_restart.text = TranslationManager.t("HUD_PLAY_AGAIN")
 	else:
 		# Stage 5 (Final Stage)
 		btn_next_stage.hide()
 		if label:
-			label.text = "恭喜通关游侠之路！\n(Congratulations! You saved Ranger's Path!)"
+			label.text = TranslationManager.t("FINAL_STAGE_CONGRATS")
 			label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.15))
-		btn_restart.text = "重新开始游戏 (Restart Game)"
+		btn_restart.text = TranslationManager.t("HUD_RESTART_GAME")
 
 func _on_next_stage_pressed():
 	var current_scene = get_tree().current_scene.scene_file_path
@@ -561,11 +563,10 @@ func _on_restart_pressed():
 	var gm = get_tree().current_scene.get_node_or_null("GameManager")
 	if gm:
 		gm.restart_game()
-
 func _on_gold_changed(new_gold: int):
-	gold_lbl.text = "金币: %d" % new_gold
+	gold_lbl.text = TranslationManager.t("HUD_GOLD") + str(new_gold)
 	if shop_gold_lbl:
-		shop_gold_lbl.text = "您的金币: %d" % new_gold
+		shop_gold_lbl.text = TranslationManager.t("HUD_GOLD_HELD") % new_gold
 
 func open_shop_ui(player_node):
 	if player_node:
@@ -750,7 +751,7 @@ func populate_shop():
 		
 		# Name label
 		var name_lbl = Label.new()
-		name_lbl.text = item.name
+		name_lbl.text = TranslationManager.t(item.name)
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.add_theme_font_size_override("font_size", 12)
@@ -769,7 +770,7 @@ func populate_shop():
 		
 		# Description label
 		var desc_lbl = Label.new()
-		desc_lbl.text = item.data.get("description", "")
+		desc_lbl.text = TranslationManager.t(item.data.get("description", ""))
 		desc_lbl.custom_minimum_size = Vector2(0, 80)
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -779,7 +780,7 @@ func populate_shop():
 		
 		# Cost label
 		var cost_lbl = Label.new()
-		cost_lbl.text = "价格: %d 金币" % item.cost
+		cost_lbl.text = TranslationManager.t("SHOP_ITEM_COST") % item.cost
 		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cost_lbl.add_theme_font_size_override("font_size", 11)
 		cost_lbl.add_theme_color_override("font_color", Color(0.9, 0.8, 0.15))
@@ -788,7 +789,7 @@ func populate_shop():
 		# Buy button
 		var btn_buy = Button.new()
 		btn_buy.custom_minimum_size = Vector2(0, 32)
-		btn_buy.text = "购买"
+		btn_buy.text = TranslationManager.t("SHOP_BUY_BTN")
 		btn_buy.pressed.connect(func(): _on_buy_item_pressed(item.name, item.cost, item.data))
 		vbox.add_child(btn_buy)
 		
@@ -868,9 +869,15 @@ func populate_upgrade_station():
 		
 		var stat_desc = ""
 		if type == "weapon":
-			stat_desc = "攻击力: +%d" % int(item.get("atk_bonus", 0.0))
+			if TranslationManager.current_locale == "en":
+				stat_desc = "ATK: +%d" % int(item.get("atk_bonus", 0.0))
+			else:
+				stat_desc = "攻击力: +%d" % int(item.get("atk_bonus", 0.0))
 		elif type == "armor":
-			stat_desc = "防御力: +%d\n生命值: +%d" % [int(item.get("def_bonus", 0.0)), int(item.get("hp_bonus", 0.0))]
+			if TranslationManager.current_locale == "en":
+				stat_desc = "DEF: +%d\nHP: +%d" % [int(item.get("def_bonus", 0.0)), int(item.get("hp_bonus", 0.0))]
+			else:
+				stat_desc = "防御力: +%d\n生命值: +%d" % [int(item.get("def_bonus", 0.0)), int(item.get("hp_bonus", 0.0))]
 		desc_lbl.text = stat_desc
 		vbox.add_child(desc_lbl)
 		
@@ -882,7 +889,7 @@ func populate_upgrade_station():
 		preview_lbl.add_theme_font_size_override("font_size", 9)
 		
 		if is_max:
-			preview_lbl.text = "【已强化至上限】"
+			preview_lbl.text = TranslationManager.t("SHOP_MAXED_PREVIEW")
 			preview_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.15))
 		else:
 			# Preview upgraded stats
@@ -897,9 +904,9 @@ func populate_upgrade_station():
 			var next_hp = base_hp * (1.0 + next_lvl * 0.4)
 			
 			if type == "weapon":
-				preview_lbl.text = "强化后 -> 攻击: +%d" % int(next_atk)
+				preview_lbl.text = TranslationManager.t("SHOP_NEXT_ATK") % int(next_atk)
 			elif type == "armor":
-				preview_lbl.text = "强化后 -> 防御: +%d\n生命: +%d" % [int(next_def), int(next_hp)]
+				preview_lbl.text = TranslationManager.t("SHOP_NEXT_ARMOR") % [int(next_def), int(next_hp)]
 		vbox.add_child(preview_lbl)
 		
 		# Cost Label
@@ -907,10 +914,13 @@ func populate_upgrade_station():
 		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cost_lbl.add_theme_font_size_override("font_size", 10)
 		if is_max:
-			cost_lbl.text = "最高等级"
+			cost_lbl.text = TranslationManager.t("SHOP_UPGRADE_COST_MAX")
 			cost_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 		else:
-			cost_lbl.text = "升级需要: %d 金币" % cost
+			if TranslationManager.current_locale == "en":
+				cost_lbl.text = "Cost: %d Gold" % cost
+			else:
+				cost_lbl.text = "升级需要: %d 金币" % cost
 			cost_lbl.add_theme_color_override("font_color", Color(0.9, 0.8, 0.15))
 		vbox.add_child(cost_lbl)
 		
@@ -919,10 +929,10 @@ func populate_upgrade_station():
 		btn_upgrade.custom_minimum_size = Vector2(0, 26)
 		btn_upgrade.add_theme_font_size_override("font_size", 10)
 		if is_max:
-			btn_upgrade.text = "已满级"
+			btn_upgrade.text = TranslationManager.t("SHOP_UPGRADE_COST_MAX")
 			btn_upgrade.disabled = true
 		else:
-			btn_upgrade.text = "强化 (升级)"
+			btn_upgrade.text = TranslationManager.t("SHOP_UPGRADE_BTN")
 			if gold_held < cost:
 				btn_upgrade.disabled = true
 			else:
@@ -984,7 +994,6 @@ func _on_upgrade_gear_pressed(slot_index: int, cost: int):
 	# Update player inventory
 	inv[slot_index] = item
 	player.set_inventory(inv)
-	player.recalculate_item_bonuses()
 	
 	# Play sound & show success status
 	SynthAudio.play_gold(self)
@@ -1125,10 +1134,10 @@ func update_quest_ui():
 		var lbl = Label.new()
 		lbl.add_theme_font_size_override("font_size", 10)
 		if q.completed:
-			lbl.text = " ✓ %s (已完成)" % q.name
+			lbl.text = " ✓ %s%s" % [TranslationManager.t(q.name), TranslationManager.t("Q_COMPLETED_STATUS")]
 			lbl.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
 		else:
-			lbl.text = " • %s (%d/%d)" % [q.name, q.current, q.target_count]
+			lbl.text = " • %s (%d/%d)" % [TranslationManager.t(q.name), q.current, q.target_count]
 			lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 		list_container.add_child(lbl)
 
@@ -1176,9 +1185,12 @@ func show_achievement_popup(quest_name: String, gold: int, xp: int):
 	var label_rewards = popup.get_node_or_null("VBox/LabelRewards")
 	
 	if label_detail:
-		label_detail.text = "【%s】" % quest_name
+		label_detail.text = "【%s】" % TranslationManager.t(quest_name)
 	if label_rewards:
-		label_rewards.text = "+%d 金币, +%d 经验" % [gold, xp]
+		if TranslationManager.current_locale == "en":
+			label_rewards.text = "+%d Gold, +%d XP" % [gold, xp]
+		else:
+			label_rewards.text = "+%d 金币, +%d 经验" % [gold, xp]
 		
 	popup.show()
 	
@@ -1188,3 +1200,59 @@ func show_achievement_popup(quest_name: String, gold: int, xp: int):
 	tween.tween_interval(3.0)
 	tween.tween_property(popup, "position:y", -110.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_callback(popup.hide)
+
+func refresh_translations():
+	# Headers & Labels
+	var quest_hdr = get_node_or_null("Control/QuestPanel/VBoxContainer/Header")
+	if quest_hdr: quest_hdr.text = TranslationManager.t("HUD_STAGE_QUESTS")
+	
+	var shop_title = get_node_or_null("Control/ShopPanel/VBox/Title")
+	if shop_title: shop_title.text = TranslationManager.t("SHOP_TITLE")
+	
+	var shop_hdr_buy = get_node_or_null("Control/ShopPanel/VBox/HeaderShop")
+	if shop_hdr_buy: shop_hdr_buy.text = "—— " + TranslationManager.t("SHOP_BUY") + " ——"
+	
+	var shop_hdr_upg = get_node_or_null("Control/ShopPanel/VBox/HeaderUpgrade")
+	if shop_hdr_upg: shop_hdr_upg.text = "—— " + TranslationManager.t("SHOP_UPGRADE") + " ——"
+	
+	var shop_close = get_node_or_null("Control/ShopPanel/VBox/BtnClose")
+	if shop_close: shop_close.text = "X"
+	
+	var talent_title = get_node_or_null("Control/TalentPanel/Title")
+	if talent_title: talent_title.text = TranslationManager.t("HUD_TALENTS")
+	
+	btn_open_talents.text = TranslationManager.t("HUD_TALENTS")
+	
+	# Victory / Defeat Panel Labels
+	var victory_title = get_node_or_null("Control/VictoryScreen/VBox/Title")
+	if victory_title: victory_title.text = TranslationManager.t("HUD_VICTORY")
+	
+	var defeat_title = get_node_or_null("Control/GameOverScreen/VBox/Title")
+	if defeat_title: defeat_title.text = TranslationManager.t("HUD_DEFEAT")
+	
+	var btn_restart_game_over = get_node_or_null("Control/GameOverScreen/VBox/BtnRestart")
+	if btn_restart_game_over: btn_restart_game_over.text = TranslationManager.t("HUD_REPLAY")
+	
+	var btn_revive_spot_lbl = get_node_or_null("Control/GameOverScreen/VBox/BtnReviveSpot")
+	if btn_revive_spot_lbl: btn_revive_spot_lbl.text = TranslationManager.t("HUD_REVIVE_SPOT")
+	
+	var btn_revive_base_lbl = get_node_or_null("Control/GameOverScreen/VBox/BtnRevive")
+	if btn_revive_base_lbl: btn_revive_base_lbl.text = TranslationManager.t("HUD_REVIVE_BASE")
+	
+	var btn_menu_game_over = get_node_or_null("Control/GameOverScreen/VBox/BtnMenu")
+	if btn_menu_game_over: btn_menu_game_over.text = TranslationManager.t("HUD_RETURN_MENU")
+	
+	var btn_menu_victory = get_node_or_null("Control/VictoryScreen/VBox/BtnMenu")
+	if btn_menu_victory: btn_menu_victory.text = TranslationManager.t("HUD_RETURN_MENU")
+	
+	var btn_restart_victory = get_node_or_null("Control/VictoryScreen/VBox/BtnRestart")
+	if btn_restart_victory: btn_restart_victory.text = TranslationManager.t("HUD_PLAY_AGAIN")
+	
+	# Refresh dynamic stats
+	if player:
+		_on_skills_changed()
+		_on_gold_changed(player.get_gold())
+		update_quest_ui()
+		populate_shop()
+		populate_upgrade_station()
+		populate_talents()

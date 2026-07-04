@@ -918,10 +918,11 @@ void HeroPlayer::set_skill_points(int p_pts) {
 }
 
 void HeroPlayer::set_inventory(const Array &p_inv) {
+    Array temp_inv = p_inv.duplicate();
     inventory.clear();
     inventory.resize(INVENTORY_SIZE);
-    for (int i = 0; i < INVENTORY_SIZE && i < p_inv.size(); ++i) {
-        inventory[i] = p_inv[i];
+    for (int i = 0; i < INVENTORY_SIZE && i < temp_inv.size(); ++i) {
+        inventory[i] = temp_inv[i];
     }
     recalculate_item_bonuses();
     emit_signal("inventory_changed");

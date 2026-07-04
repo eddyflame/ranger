@@ -99,6 +99,6 @@ move_speed = 110.0
 xp_reward = 800
 
 [node name="Merchant" parent="." instance=ExtResource("6_merchant")]
-position = Vector2(80, 290)
+position = Vector2(200, 275)
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]

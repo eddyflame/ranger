@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7")
 [autoload]
 
 SynthAudioManager="*res://scenes/synth_audio.gd"
+TranslationManager="*res://scenes/translation_manager.gd"
 
 [display]
 

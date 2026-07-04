@@ -163,7 +163,7 @@ func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
 	if attacker and attacker.has_meta("last_hit_was_crit") and attacker.get_meta("last_hit_was_crit"):
 		attacker.remove_meta("last_hit_was_crit")
 		color = Color(1.0, 0.15, 0.15)
-		text_prefix = "暴击 "
+		text_prefix = TranslationManager.t("ALERT_CRIT")
 		if victim == player:
 			player.call("trigger_shake", 12.0, 0.3)
 		else:
@@ -175,13 +175,13 @@ func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
 	var block_suffix = ""
 	if victim.has_meta("last_damage_status") and victim.get_meta("last_damage_status") == "blocked":
 		victim.remove_meta("last_damage_status")
-		block_suffix = " (格挡)"
+		block_suffix = TranslationManager.t("ALERT_BLOCKED")
 		
 	if victim == player and text_prefix == "":
 		color = Color(1.0, 0.2, 0.2)
 		
 	spawn_floating_text(victim.global_position + Vector2(0, -20), "%s-%d%s" % [text_prefix, int(amount), block_suffix], color)
-	if text_prefix == "暴击 ":
+	if text_prefix == TranslationManager.t("ALERT_CRIT"):
 		SynthAudio.play_crit(self)
 	else:
 		SynthAudio.play_hit(self)
@@ -201,11 +201,11 @@ func _on_player_xp_gained(amount: int):
 
 func _on_player_gold_gained(amount: int):
 	if amount <= 0: return
-	spawn_floating_text(player.global_position + Vector2(0, -30), "+%d 金币" % amount, Color(0.95, 0.8, 0.15))
+	spawn_floating_text(player.global_position + Vector2(0, -30), ( "+%d Gold" if TranslationManager.current_locale == "en" else "+%d 金币" ) % amount, Color(0.95, 0.8, 0.15))
 
 func spawn_floating_text(pos: Vector2, text: String, color: Color):
 	var label = Label.new()
-	label.text = text
+	label.text = TranslationManager.t(text)
 	label.label_settings = LabelSettings.new()
 	label.label_settings.font_size = 14
 	label.label_settings.font_color = color
@@ -335,13 +335,7 @@ func _on_enemy_died(enemy_node):
 			var scatter = Vector2(randf_range(-60, 60), randf_range(-40, 40))
 			SaveSystem.spawn_loot_drop(self, death_pos + scatter, loot)
 			SaveSystem.register_unlocked_item(loot)
-		# Delay victory by 6 seconds so player can pick up drops
-		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 Boss已击杀！6秒后通关…", Color(1.0, 0.85, 0.15))
-		var delay_timer = get_tree().create_timer(6.0)
-		delay_timer.timeout.connect(func():
-			var gm = get_node_or_null("GameManager")
-			if gm: gm.trigger_victory()
-		)
+		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 领主已击败！通关传送门已开启", Color(1.0, 0.85, 0.15))
 	else:
 		var loot = SaveSystem.generate_graded_loot(false)
 		SaveSystem.spawn_loot_drop(self, death_pos, loot)
