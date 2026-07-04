@@ -94,18 +94,22 @@ void Projectile::_ready() {
     if (Engine::get_singleton()->is_editor_hint()) {
         return;
     }
-    Node *particles = get_node<Node>("FireParticles");
-    if (particles) {
-        particles->set("emitting", is_searing);
+    if (has_node("FireParticles")) {
+        Node *particles = get_node<Node>("FireParticles");
+        if (particles) {
+            particles->set("emitting", is_searing);
+        }
     }
 }
 
 void Projectile::set_searing_effect(bool p_searing) {
     is_searing = p_searing;
     if (is_inside_tree()) {
-        Node *particles = get_node<Node>("FireParticles");
-        if (particles) {
-            particles->set("emitting", p_searing);
+        if (has_node("FireParticles")) {
+            Node *particles = get_node<Node>("FireParticles");
+            if (particles) {
+                particles->set("emitting", p_searing);
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ bg_color = Color(0.85, 0.15, 0.15, 1)
 [node name="Spiderling" type="Enemy"]
 y_sort_enabled = true
 collision_layer = 2
-collision_mask = 3
+collision_mask = 1
 character_name = "Spiderling"
 level = 2
 strength = 5

@@ -120,13 +120,31 @@ func _ready():
 	
 	# 3. Spawn obsidian border pillars
 	spawn_obsidian_borders()
+	spawn_boundary_walls()
 
 	# Record enemy spawn info for 1-minute respawn
 	for child in get_children():
 		if child.is_in_group("enemies"):
+			var path = child.scene_file_path
+			if path == "":
+				var cname = child.name.to_lower()
+				if "abyssboss" in cname or "abyss_boss" in cname or "abyss" in cname:
+					path = "res://scenes/abyss_boss.tscn"
+				elif "spiderqueen" in cname or "spider_queen" in cname or "queen" in cname:
+					path = "res://scenes/spider_queen.tscn"
+				elif "boss" in cname:
+					path = "res://scenes/boss.tscn"
+				elif "ranged" in cname or "spitter" in cname:
+					path = "res://scenes/ranged_enemy.tscn"
+				elif "spiderling" in cname:
+					path = "res://scenes/spiderling.tscn"
+				else:
+					path = "res://scenes/enemy.tscn"
+			var is_b = "boss" in child.name.to_lower() or "queen" in child.name.to_lower() or "mage" in child.name.to_lower()
 			enemy_spawn_data.append({
-				"scene_path": child.scene_file_path,
-				"position": child.global_position
+				"scene_path": path,
+				"position": child.global_position,
+				"is_boss": is_b
 			})
 
 	# Setup 1-minute respawn timer
@@ -230,6 +248,8 @@ func _respawn_enemies():
 		return
 	print("[Stage 5] Respawning enemies...")
 	for data in enemy_spawn_data:
+		if data.get("is_boss", false):
+			continue
 		var enemy_scene = load(data.scene_path)
 		if enemy_scene:
 			var enemy = enemy_scene.instantiate()
@@ -379,3 +399,40 @@ func spawn_floating_text(pos: Vector2, text: String, color: Color):
 	tween.tween_property(lbl, "global_position", pos + Vector2(0, -45), 1.2)
 	tween.parallel().tween_property(lbl, "modulate:a", 0.0, 1.2)
 	tween.tween_callback(lbl.queue_free)
+
+func spawn_boundary_walls():
+	var min_x = OUTLINE_POINTS[0].x
+	var max_x = OUTLINE_POINTS[0].x
+	var min_y = OUTLINE_POINTS[0].y
+	var max_y = OUTLINE_POINTS[0].y
+	for p in OUTLINE_POINTS:
+		min_x = min(min_x, p.x)
+		max_x = max(max_x, p.x)
+		min_y = min(min_y, p.y)
+		max_y = max(max_y, p.y)
+		
+	var left = min_x - 300
+	var right = max_x + 300
+	var top = min_y - 200
+	var bottom = max_y + 200
+	
+	var walls = [
+		{ "pos": Vector2(left - 10, (top + bottom)/2.0), "size": Vector2(20, (bottom - top) + 100) },
+		{ "pos": Vector2(right + 10, (top + bottom)/2.0), "size": Vector2(20, (bottom - top) + 100) },
+		{ "pos": Vector2((left + right)/2.0, top - 10), "size": Vector2((right - left) + 100, 20) },
+		{ "pos": Vector2((left + right)/2.0, bottom + 10), "size": Vector2((right - left) + 100, 20) }
+	]
+	
+	for w in walls:
+		var sb = StaticBody2D.new()
+		sb.collision_layer = 1
+		sb.collision_mask = 0
+		
+		var col = CollisionShape2D.new()
+		var shape = RectangleShape2D.new()
+		shape.size = w.size
+		col.shape = shape
+		sb.add_child(col)
+		
+		sb.global_position = w.pos
+		add_child(sb)
