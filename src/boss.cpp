@@ -17,13 +17,13 @@ void Boss::_bind_methods() {
 Boss::Boss() {
     character_name = "Corrupted Treant (Boss)";
     level = 5;
-    strength = 35;
+    strength = 18;
     agility = 10;
     intelligence = 15;
-    base_atk = 25.0f;
+    base_atk = 12.0f;
     base_def = 4.0f;
     move_speed = 90.0f;
-    xp_reward = 200;
+    xp_reward = 450;
     
     aggro_range = 220.0f;
     attack_range = 65.0f;
@@ -86,20 +86,7 @@ void Boss::cast_stomp() {
 }
 
 void Boss::die() {
-    Vector2 death_pos = get_global_position();
     Enemy::die(); // Spawn loot and award XP
-    
-    // Spawn exit portal at boss death position
-    Ref<PackedScene> portal_scene = ResourceLoader::get_singleton()->load("res://scenes/exit_portal.tscn");
-    if (portal_scene.is_valid()) {
-        Node *inst = portal_scene->instantiate();
-        Node2D *portal = Object::cast_to<Node2D>(inst);
-        if (portal) {
-            portal->set_global_position(death_pos);
-            get_parent()->add_child(portal);
-            UtilityFunctions::print("[Boss Defeat] Spawning exit portal at boss death position: ", death_pos);
-        }
-    }
 }
 
 } // namespace godot

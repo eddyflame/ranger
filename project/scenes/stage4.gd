@@ -20,11 +20,83 @@ var OUTLINE_POINTS := PackedVector2Array([
 
 func _ready():
 	SynthAudioManager.set_bgm_mode("explore")
-	# 1. Build Navigation Polygon dynamically from outline points
+	
+	# Dynamic Map Inflation & Positions Scaling (1.6x space for kiting)
+	var map_scale := 1.6
+	var centroid := Vector2.ZERO
+	for p in OUTLINE_POINTS:
+		centroid += p
+	centroid /= OUTLINE_POINTS.size()
+	
+	for i in range(OUTLINE_POINTS.size()):
+		var dir = OUTLINE_POINTS[i] - centroid
+		OUTLINE_POINTS[i] = centroid + dir * map_scale
+		
+	# Scale starting positions of player and existing enemies
+	for child in get_children():
+		if child.is_in_group("enemies") or child == player:
+			var dir = child.global_position - centroid
+			child.global_position = centroid + dir * map_scale
+
+	# Update Camera2D limits dynamically to match the inflated map
+	if player:
+		var camera = player.get_node_or_null("Camera2D")
+		if camera:
+			var min_x = OUTLINE_POINTS[0].x
+			var max_x = OUTLINE_POINTS[0].x
+			var min_y = OUTLINE_POINTS[0].y
+			var max_y = OUTLINE_POINTS[0].y
+			for p in OUTLINE_POINTS:
+				min_x = min(min_x, p.x)
+				max_x = max(max_x, p.x)
+				min_y = min(min_y, p.y)
+				max_y = max(max_y, p.y)
+			camera.limit_left = int(min_x - 300)
+			camera.limit_right = int(max_x + 300)
+			camera.limit_top = int(min_y - 200)
+			camera.limit_bottom = int(max_y + 200)
+
+	# Programmatically duplicate normal enemies to increase density
+	var existing_mobs = []
+	for child in get_children():
+		if child.is_in_group("enemies"):
+			existing_mobs.append(child)
+			
+	for mob in existing_mobs:
+		var mob_name = mob.name.to_lower()
+		if "boss" in mob_name or "treant" in mob_name or "queen" in mob_name or "mage" in mob_name:
+			continue
+		var path = mob.scene_file_path
+		if path != "":
+			var scene = load(path)
+			if scene:
+				var extra = scene.instantiate()
+				var angle = randf() * TAU
+				var dist = randf_range(120.0, 240.0)
+				extra.global_position = mob.global_position + Vector2(cos(angle), sin(angle)) * dist
+				add_child(extra)
+
+	# 1. Build Navigation Polygon dynamically covering the map's bounding box
 	var nav_region = $NavigationRegion2D
 	if nav_region:
+		var min_x = OUTLINE_POINTS[0].x
+		var max_x = OUTLINE_POINTS[0].x
+		var min_y = OUTLINE_POINTS[0].y
+		var max_y = OUTLINE_POINTS[0].y
+		for p in OUTLINE_POINTS:
+			min_x = min(min_x, p.x)
+			max_x = max(max_x, p.x)
+			min_y = min(min_y, p.y)
+			max_y = max(max_y, p.y)
+			
+		var bounding_box = PackedVector2Array([
+			Vector2(min_x - 600, min_y - 400),
+			Vector2(max_x + 600, min_y - 400),
+			Vector2(max_x + 600, max_y + 400),
+			Vector2(min_x - 600, max_y + 400)
+		])
 		var nav_poly = NavigationPolygon.new()
-		nav_poly.add_outline(OUTLINE_POINTS)
+		nav_poly.add_outline(bounding_box)
 		nav_poly.make_polygons_from_outlines()
 		nav_region.navigation_polygon = nav_poly
 		# NavigationRegion2D bakes automatically on ready with GDExtension bindings in Godot 4.7
@@ -51,7 +123,7 @@ func _ready():
 	# 3. Spawn forest border walls
 	spawn_forest_borders()
 
-	# Record enemy spawn info for 5-minute respawn
+	# Record enemy spawn info for 1-minute respawn
 	for child in get_children():
 		if child.is_in_group("enemies"):
 			enemy_spawn_data.append({
@@ -59,9 +131,9 @@ func _ready():
 				"position": child.global_position
 			})
 
-	# Setup 5-minute respawn timer
+	# Setup 1-minute respawn timer
 	respawn_timer = Timer.new()
-	respawn_timer.wait_time = 300.0
+	respawn_timer.wait_time = 60.0  # 1 minute
 	respawn_timer.one_shot = false
 	respawn_timer.autostart = true
 	respawn_timer.timeout.connect(_respawn_enemies)
@@ -139,7 +211,7 @@ func spawn_forest_borders():
 		
 		var segment_dir = p2 - p1
 		var segment_length = segment_dir.length()
-		var step_dist = 36.0 # Distance between tree nodes
+		var step_dist = 90.0 # Distance between tree nodes
 		var steps = int(segment_length / step_dist)
 		
 		var dir_norm = segment_dir.normalized()
@@ -295,9 +367,9 @@ func _on_player_level_up(new_level: int):
 
 func _respawn_enemies():
 	var living = get_tree().get_nodes_in_group("enemies")
-	if living.size() > 0:
+	if living.size() >= 30:
 		return
-	print("[Respawn] 5 minutes elapsed — spawning new enemy wave")
+	print("[Respawn] 1 minute elapsed — spawning new enemy wave")
 	for spawn in enemy_spawn_data:
 		if spawn.scene_path == "": continue
 		var enemy_scene = load(spawn.scene_path)
@@ -342,16 +414,34 @@ func _on_enemy_died(enemy_node):
 			hud.feed_kill(enemy_node.character_name)
 
 	if is_boss:
+		# Boss drops 3 items scattered around its death position
 		for i in range(3):
 			var loot = SaveSystem.generate_graded_loot(true)
 			var scatter = Vector2(randf_range(-60, 60), randf_range(-40, 40))
 			SaveSystem.spawn_loot_drop(self, death_pos + scatter, loot)
 			SaveSystem.register_unlocked_item(loot)
+			
+		# Find the Outline Point with the maximum X coordinate (the far edge of the map)
+		var max_pt = OUTLINE_POINTS[0]
+		for p in OUTLINE_POINTS:
+			if p.x > max_pt.x:
+				max_pt = p
+				
+		# Spawn exit portal at the far edge outline point
+		var portal_scene = load("res://scenes/exit_portal.tscn")
+		if portal_scene:
+			var portal = portal_scene.instantiate()
+			portal.global_position = max_pt
+			add_child(portal)
+			print("[Boss Defeat] Spawning exit portal at the far map edge: ", max_pt)
+			
 		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 领主已击败！通关传送门已开启", Color(1.0, 0.85, 0.15))
 	else:
-		var loot = SaveSystem.generate_graded_loot(false)
-		SaveSystem.spawn_loot_drop(self, death_pos, loot)
-		SaveSystem.register_unlocked_item(loot)
+		# 25% chance to drop gear for regular enemies
+		if randf() <= 0.25:
+			var loot = SaveSystem.generate_graded_loot(false)
+			SaveSystem.spawn_loot_drop(self, death_pos, loot)
+			SaveSystem.register_unlocked_item(loot)
 
 	if player:
 		SaveSystem.save_game(player)

@@ -77,6 +77,19 @@ var dictionary := {
 	"SHOP_NEXT_ATK": { "en": "Next -> ATK: +%d", "zh": "强化后 -> 攻击: +%d" },
 	"SHOP_NEXT_ARMOR": { "en": "Next -> DEF: +%d\nHP: +%d", "zh": "Next -> DEF: +%d\nHP: +%d" },
 	"SHOP_UPGRADE_COST_MAX": { "en": "Max Level", "zh": "最高等级" },
+	"SHOP_SHELF_RANDOM_STATS": { "en": "Stats are rolled upon purchase.", "zh": "购买后随机产生属性数值。" },
+	"SET_CHAMPION": {
+		"en": "\n[Champion Set]\n- 2-pc: Phys Dmg +15%\n- 3-pc: Crit Rate +20%",
+		"zh": "\n[勇者套装 (Champion)]\n- 2件: 物理伤害提升 15%\n- 3件: 物理暴击率提升 20%"
+	},
+	"SET_SHADOW": {
+		"en": "\n[Shadow Set]\n- 2-pc: Evade Rate +15%\n- 3-pc: Lifesteal +15%",
+		"zh": "\n[影武者套装 (Shadow)]\n- 2件: 闪避率提升 15%\n- 3件: 生命吸取提升 15%"
+	},
+	"SET_LAVA": {
+		"en": "\n[Lava Set]\n- 2-pc: +150 Max HP & +10 DEF\n- 3-pc: Fire Aura (30 Dmg/2s)",
+		"zh": "\n[熔岩守卫套装 (Lava)]\n- 2件: +150生命上限 & +10防御\n- 3件: 末日怒火 (2秒一周围敌30伤)"
+	},
 	
 	# Floating & Alerts
 	"ALERT_CRIT": { "en": "Crit ", "zh": "暴击 " },

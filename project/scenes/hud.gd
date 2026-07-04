@@ -598,10 +598,14 @@ func _on_buy_item_pressed(item_name: String, cost: int, item_data: Dictionary):
 		_show_shop_status("金币不足！(需要 %d 金币，持有 %d)" % [cost, current_gold], Color(1, 0.3, 0.1))
 		return
 	
-	if player.add_to_inventory(item_data):
+	var item_to_add = item_data
+	if item_data.get("type", "") in ["weapon", "armor", "boots", "crest"]:
+		item_to_add = SaveSystem.roll_purchased_item(item_data)
+		
+	if player.add_to_inventory(item_to_add):
 		player.set_gold(current_gold - cost)
 		SynthAudio.play_purchase(self)
-		_show_shop_status("✓ 已购买: " + item_name, Color(0.2, 0.9, 0.2))
+		_show_shop_status("✓ 已购买: " + TranslationManager.t(item_to_add.get("name", "")), Color(0.2, 0.9, 0.2))
 		feed_purchase(item_data.get("name", ""))
 		print("[Shop] Purchase success: ", item_name, " remaining gold: ", player.get_gold())
 		SaveSystem.save_game(player)
@@ -725,6 +729,29 @@ func populate_shop():
 				"data": item
 			})
 			
+	# Sort catalog: quality/grade descending, then category type descending
+	catalog.sort_custom(func(a, b):
+		var grade_a = a.data.get("grade", "common")
+		var grade_b = b.data.get("grade", "common")
+		
+		var w_grade_a = 5 if grade_a == "legendary" else (4 if grade_a == "epic" else (3 if grade_a == "rare" else (2 if grade_a == "uncommon" else 1)))
+		var w_grade_b = 5 if grade_b == "legendary" else (4 if grade_b == "epic" else (3 if grade_b == "rare" else (2 if grade_b == "uncommon" else 1)))
+		
+		if w_grade_a != w_grade_b:
+			return w_grade_a > w_grade_b
+			
+		var type_a = a.data.get("type", "")
+		var type_b = b.data.get("type", "")
+		
+		var w_type_a = 6 if type_a == "weapon" else (5 if type_a == "armor" else (4 if type_a == "boots" else (3 if type_a == "crest" else (2 if type_a == "potion" else 1))))
+		var w_type_b = 6 if type_b == "weapon" else (5 if type_b == "armor" else (4 if type_b == "boots" else (3 if type_b == "crest" else (2 if type_b == "potion" else 1))))
+		
+		if w_type_a != w_type_b:
+			return w_type_a > w_type_b
+			
+		return a.name < b.name
+	)
+			
 	# Instantiate shop panels dynamically — skip common (white) gear
 	for item in catalog:
 		var item_grade = item.data.get("grade", "common")
@@ -770,7 +797,20 @@ func populate_shop():
 		
 		# Description label
 		var desc_lbl = Label.new()
-		desc_lbl.text = TranslationManager.t(item.data.get("description", ""))
+		var type = item.data.get("type", "")
+		if type in ["weapon", "armor", "boots", "crest"]:
+			var shelf_desc = TranslationManager.t("SHOP_SHELF_RANDOM_STATS")
+			if item.data.has("set_name"):
+				var set_name = item.data.get("set_name", "")
+				if set_name == "champion":
+					shelf_desc += "\n" + TranslationManager.t("SET_CHAMPION")
+				elif set_name == "shadow":
+					shelf_desc += "\n" + TranslationManager.t("SET_SHADOW")
+				elif set_name == "lava":
+					shelf_desc += "\n" + TranslationManager.t("SET_LAVA")
+			desc_lbl.text = shelf_desc
+		else:
+			desc_lbl.text = TranslationManager.t(item.data.get("description", ""))
 		desc_lbl.custom_minimum_size = Vector2(0, 80)
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -812,7 +852,11 @@ func populate_upgrade_station():
 			continue
 			
 		var type = item.get("type", "")
-		if type != "weapon" and type != "armor":
+		if type != "weapon" and type != "armor" and type != "boots" and type != "crest":
+			continue
+			
+		var grade = item.get("grade", "common")
+		if grade != "epic" and grade != "legendary":
 			continue
 			
 		var lvl = item.get("upgrade_level", 0)
@@ -843,12 +887,11 @@ func populate_upgrade_station():
 		var suffix = ""
 		if lvl > 0:
 			suffix = " +%d" % lvl
-		name_lbl.text = item.get("name", "") + suffix
+		name_lbl.text = TranslationManager.t(item.get("name", "")) + suffix
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.add_theme_font_size_override("font_size", 12)
 		
-		var grade = item.get("grade", "common")
 		if grade == "uncommon":
 			name_lbl.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
 		elif grade == "rare":
@@ -878,6 +921,16 @@ func populate_upgrade_station():
 				stat_desc = "DEF: +%d\nHP: +%d" % [int(item.get("def_bonus", 0.0)), int(item.get("hp_bonus", 0.0))]
 			else:
 				stat_desc = "防御力: +%d\n生命值: +%d" % [int(item.get("def_bonus", 0.0)), int(item.get("hp_bonus", 0.0))]
+		elif type == "boots":
+			if TranslationManager.current_locale == "en":
+				stat_desc = "SPD: +%d" % int(item.get("speed_bonus", 0.0))
+			else:
+				stat_desc = "移动速度: +%d" % int(item.get("speed_bonus", 0.0))
+		elif type == "crest":
+			if TranslationManager.current_locale == "en":
+				stat_desc = "ATK: +%d\nHP: +%d\nSPD: +%d" % [int(item.get("atk_bonus", 0.0)), int(item.get("hp_bonus", 0.0)), int(item.get("speed_bonus", 0.0))]
+			else:
+				stat_desc = "攻击: +%d\n生命: +%d\n速度: +%d" % [int(item.get("atk_bonus", 0.0)), int(item.get("hp_bonus", 0.0)), int(item.get("speed_bonus", 0.0))]
 		desc_lbl.text = stat_desc
 		vbox.add_child(desc_lbl)
 		
@@ -898,15 +951,27 @@ func populate_upgrade_station():
 			var base_atk = item.get("base_atk_bonus", item.get("atk_bonus", 0.0))
 			var base_def = item.get("base_def_bonus", item.get("def_bonus", 0.0))
 			var base_hp = item.get("base_hp_bonus", item.get("hp_bonus", 0.0))
+			var base_speed = item.get("base_speed_bonus", item.get("speed_bonus", 0.0))
 			
 			var next_atk = base_atk * (1.0 + next_lvl * 0.4)
 			var next_def = base_def * (1.0 + next_lvl * 0.4)
 			var next_hp = base_hp * (1.0 + next_lvl * 0.4)
+			var next_speed = base_speed * (1.0 + next_lvl * 0.4)
 			
 			if type == "weapon":
 				preview_lbl.text = TranslationManager.t("SHOP_NEXT_ATK") % int(next_atk)
 			elif type == "armor":
 				preview_lbl.text = TranslationManager.t("SHOP_NEXT_ARMOR") % [int(next_def), int(next_hp)]
+			elif type == "boots":
+				if TranslationManager.current_locale == "en":
+					preview_lbl.text = "Next -> SPD: +%d" % int(next_speed)
+				else:
+					preview_lbl.text = "强化后 -> 速度: +%d" % int(next_speed)
+			elif type == "crest":
+				if TranslationManager.current_locale == "en":
+					preview_lbl.text = "Next -> ATK: +%d\nHP: +%d\nSPD: +%d" % [int(next_atk), int(next_hp), int(next_speed)]
+				else:
+					preview_lbl.text = "强化后 -> 攻击: +%d\n生命: +%d\n速度: +%d" % [int(next_atk), int(next_hp), int(next_speed)]
 		vbox.add_child(preview_lbl)
 		
 		# Cost Label
@@ -967,29 +1032,43 @@ func _on_upgrade_gear_pressed(slot_index: int, cost: int):
 	# Deduct gold
 	player.set_gold(current_gold - cost)
 	
-	# Set base stats if not present
+	# Set base stats if not present (using correct bracket notation)
 	if not item.has("base_atk_bonus") and item.has("atk_bonus"):
-		item["base_atk_bonus"] = item.atk_bonus
+		item["base_atk_bonus"] = item["atk_bonus"]
 	if not item.has("base_def_bonus") and item.has("def_bonus"):
-		item["base_def_bonus"] = item.def_bonus
+		item["base_def_bonus"] = item["def_bonus"]
 	if not item.has("base_hp_bonus") and item.has("hp_bonus"):
-		item["base_hp_bonus"] = item.hp_bonus
+		item["base_hp_bonus"] = item["hp_bonus"]
+	if not item.has("base_speed_bonus") and item.has("speed_bonus"):
+		item["base_speed_bonus"] = item["speed_bonus"]
+		
+	# Back up original description
+	if not item.has("original_description"):
+		item["original_description"] = item.get("description", "")
 		
 	var next_lvl = lvl + 1
 	item["upgrade_level"] = next_lvl
 	
 	# Compute new stats (+40% per upgrade level)
 	var type = item.get("type", "")
-	if type == "weapon":
-		var base_atk = item.get("base_atk_bonus", 0.0)
-		item["atk_bonus"] = base_atk * (1.0 + next_lvl * 0.4)
-		item["description"] = "Weapon (Upgraded +%d). +%d ATK." % [next_lvl, int(item["atk_bonus"])]
-	elif type == "armor":
-		var base_def = item.get("base_def_bonus", 0.0)
-		var base_hp = item.get("base_hp_bonus", 0.0)
-		item["def_bonus"] = base_def * (1.0 + next_lvl * 0.4)
-		item["hp_bonus"] = base_hp * (1.0 + next_lvl * 0.4)
-		item["description"] = "Armor (Upgraded +%d). +%d DEF, +%d HP." % [next_lvl, int(item["def_bonus"]), int(item["hp_bonus"])]
+	var multiplier = 1.0 + next_lvl * 0.4
+	
+	if item.has("base_atk_bonus"):
+		item["atk_bonus"] = round(item["base_atk_bonus"] * multiplier)
+	if item.has("base_def_bonus"):
+		item["def_bonus"] = round(item["base_def_bonus"] * multiplier)
+	if item.has("base_hp_bonus"):
+		item["hp_bonus"] = round(item["base_hp_bonus"] * multiplier)
+	if item.has("base_speed_bonus"):
+		item["speed_bonus"] = round(item["base_speed_bonus"] * multiplier)
+		
+	# Update description with dynamic upgrade suffix
+	var upg_suffix = ""
+	if TranslationManager.current_locale == "en":
+		upg_suffix = "\n⚡ Reinforced: +%d (Stats +%d%%)" % [next_lvl, next_lvl * 40]
+	else:
+		upg_suffix = "\n⚡ 强化等级: +%d (基础属性提升 +%d%%)" % [next_lvl, next_lvl * 40]
+	item["description"] = item.get("original_description", "") + upg_suffix
 		
 	# Update player inventory
 	inv[slot_index] = item
@@ -997,7 +1076,7 @@ func _on_upgrade_gear_pressed(slot_index: int, cost: int):
 	
 	# Play sound & show success status
 	SynthAudio.play_gold(self)
-	_show_shop_status("✓ 强化成功：%s -> +%d!" % [item.get("name", ""), next_lvl], Color(0.2, 0.9, 0.2))
+	_show_shop_status("✓ 强化成功：%s -> +%d!" % [TranslationManager.t(item.get("name", "")), next_lvl], Color(0.2, 0.9, 0.2))
 	
 	# Save game progress
 	SaveSystem.save_game(player)

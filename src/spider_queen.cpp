@@ -20,13 +20,13 @@ void SpiderQueen::_bind_methods() {
 SpiderQueen::SpiderQueen() {
     character_name = "Spider Queen (Boss)";
     level = 7;
-    strength = 45;
+    strength = 22;
     agility = 15;
     intelligence = 25;
-    base_atk = 35.0f;
+    base_atk = 16.0f;
     base_def = 6.0f;
     move_speed = 100.0f;
-    xp_reward = 350;
+    xp_reward = 800;
 
     aggro_range = 300.0f;
     attack_range = 100.0f;

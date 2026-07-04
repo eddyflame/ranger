@@ -35,13 +35,13 @@ void Enemy::_bind_methods() {
 Enemy::Enemy() {
     character_name = "Forest Wolf";
     level = 1;
-    strength = 8;
+    strength = 4;
     agility = 6;
     intelligence = 2;
-    base_atk = 8.0f;
+    base_atk = 4.0f;
     base_def = 1.0f;
     move_speed = 110.0f;
-    xp_reward = 20;
+    xp_reward = 45;
 }
 
 Enemy::~Enemy() {}
@@ -249,35 +249,21 @@ void Enemy::die() {
         HeroPlayer *player = Object::cast_to<HeroPlayer>(tree->get_first_node_in_group("player"));
         if (player) {
             player->add_xp(xp_reward);
+            
+            // Auto add gold instead of physical drop
+            int min_gold = 25;
+            int max_gold = 40;
+            if (get_name().contains("Boss")) {
+                min_gold = 100;
+                max_gold = 250;
+            }
+            int gold_dropped = UtilityFunctions::randi_range(min_gold, max_gold);
+            player->set_gold(player->get_gold() + gold_dropped);
+            player->emit_signal("gold_gained", gold_dropped);
         }
     }
 
     spawn_loot();
-    
-    // Spawn gold coins!
-    int min_gold = 25;
-    int max_gold = 40;
-    if (get_name().contains("Boss")) {
-        min_gold = 100;
-        max_gold = 250;
-    }
-    
-    int gold_dropped = UtilityFunctions::randi_range(min_gold, max_gold);
-    Ref<PackedScene> gold_scene = ResourceLoader::get_singleton()->load("res://scenes/item_drop.tscn");
-    if (gold_scene.is_valid()) {
-        Node *inst = gold_scene->instantiate();
-        ItemDrop *drop = Object::cast_to<ItemDrop>(inst);
-        if (drop) {
-            Dictionary gold_data;
-            gold_data["name"] = "+" + String::num_int64(gold_dropped) + " 金币";
-            gold_data["type"] = "gold";
-            gold_data["amount"] = gold_dropped;
-            
-            drop->set_global_position(get_global_position() + Vector2(UtilityFunctions::randf_range(-15.0f, 15.0f), UtilityFunctions::randf_range(-15.0f, 15.0f)));
-            drop->set_item_data(gold_data);
-            get_parent()->add_child(drop);
-        }
-    }
     
     // Fade out and queue free
     queue_free();
