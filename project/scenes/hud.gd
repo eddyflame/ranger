@@ -58,6 +58,7 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 var player: CharacterBody2D = null
 var _is_ready = false
 var active_quests: Array = []
+var boss_notice_panel: PanelContainer = null
 
 var base_shop_items = [
 	{
@@ -167,6 +168,12 @@ func _ready():
 
 	TranslationManager.locale_changed.connect(refresh_translations)
 	refresh_translations()
+	
+	var instructions = get_node_or_null("Control/Instructions")
+	if instructions:
+		instructions.visible = false
+		
+	setup_boss_defeated_notice()
 	_is_ready = true
 
 func _process(delta):
@@ -597,6 +604,16 @@ func _on_buy_item_pressed(item_name: String, cost: int, item_data: Dictionary):
 	if current_gold < cost:
 		_show_shop_status("金币不足！(需要 %d 金币，持有 %d)" % [cost, current_gold], Color(1, 0.3, 0.1))
 		return
+		
+	if item_data.get("type", "") in ["weapon", "armor", "boots", "crest"]:
+		var owned = false
+		for slot in player.get_inventory():
+			if slot and not slot.is_empty() and slot.get("name", "") == item_name:
+				owned = true
+				break
+		if owned:
+			_show_shop_status("您已拥有该装备！", Color(1, 0.3, 0.1))
+			return
 	
 	var item_to_add = item_data
 	if item_data.get("type", "") in ["weapon", "armor", "boots", "crest"]:
@@ -610,6 +627,7 @@ func _on_buy_item_pressed(item_name: String, cost: int, item_data: Dictionary):
 		print("[Shop] Purchase success: ", item_name, " remaining gold: ", player.get_gold())
 		SaveSystem.save_game(player)
 		populate_upgrade_station()
+		populate_shop()
 	else:
 		_show_shop_status("背包已满！（共6格）", Color(1, 0.3, 0.1))
 		print("[Shop] Buy failed: inventory full")
@@ -829,8 +847,21 @@ func populate_shop():
 		# Buy button
 		var btn_buy = Button.new()
 		btn_buy.custom_minimum_size = Vector2(0, 32)
-		btn_buy.text = TranslationManager.t("SHOP_BUY_BTN")
-		btn_buy.pressed.connect(func(): _on_buy_item_pressed(item.name, item.cost, item.data))
+		
+		var already_owned = false
+		if player and item.data.get("type", "") in ["weapon", "armor", "boots", "crest"]:
+			for slot in player.get_inventory():
+				if slot and not slot.is_empty() and slot.get("name", "") == item.name:
+					already_owned = true
+					break
+					
+		if already_owned:
+			btn_buy.text = TranslationManager.t("SHOP_OWNED")
+			btn_buy.disabled = true
+		else:
+			btn_buy.text = TranslationManager.t("SHOP_BUY_BTN")
+			btn_buy.pressed.connect(func(): _on_buy_item_pressed(item.name, item.cost, item.data))
+			
 		vbox.add_child(btn_buy)
 		
 		shop_items_container.add_child(panel)
@@ -1335,3 +1366,85 @@ func refresh_translations():
 		populate_shop()
 		populate_upgrade_station()
 		populate_talents()
+	refresh_notice_texts()
+
+func setup_boss_defeated_notice():
+	boss_notice_panel = PanelContainer.new()
+	boss_notice_panel.name = "BossDefeatedNotice"
+	boss_notice_panel.visible = false
+	
+	boss_notice_panel.custom_minimum_size = Vector2(400, 200)
+	boss_notice_panel.anchors_preset = Control.PRESET_CENTER
+	boss_notice_panel.anchor_left = 0.5
+	boss_notice_panel.anchor_top = 0.5
+	boss_notice_panel.anchor_right = 0.5
+	boss_notice_panel.anchor_bottom = 0.5
+	boss_notice_panel.grow_horizontal = 2
+	boss_notice_panel.grow_vertical = 2
+	boss_notice_panel.offset_left = -200
+	boss_notice_panel.offset_top = -100
+	boss_notice_panel.offset_right = 200
+	boss_notice_panel.offset_bottom = 100
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.15, 0.95)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.95, 0.8, 0.15, 1.0)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	boss_notice_panel.add_theme_stylebox_override("panel", style)
+	
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	boss_notice_panel.add_child(margin)
+	
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 15)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	margin.add_child(vbox)
+	
+	var title = Label.new()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color(0.95, 0.8, 0.15, 1.0))
+	vbox.add_child(title)
+	
+	var desc = Label.new()
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.add_theme_font_size_override("font_size", 12)
+	desc.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1.0))
+	vbox.add_child(desc)
+	
+	var btn_close = Button.new()
+	btn_close.custom_minimum_size = Vector2(160, 36)
+	btn_close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn_close.pressed.connect(func(): boss_notice_panel.visible = false)
+	vbox.add_child(btn_close)
+	
+	var control_node = get_node_or_null("Control")
+	if control_node:
+		control_node.add_child(boss_notice_panel)
+
+func show_boss_defeated_notice():
+	refresh_notice_texts()
+	if boss_notice_panel:
+		boss_notice_panel.visible = true
+
+func refresh_notice_texts():
+	if boss_notice_panel:
+		var vbox = boss_notice_panel.get_child(0).get_child(0)
+		var title = vbox.get_child(0)
+		var desc = vbox.get_child(1)
+		var btn = vbox.get_child(2)
+		title.text = "🏆 " + TranslationManager.t("BOSS_DEFEATED_TITLE")
+		desc.text = TranslationManager.t("BOSS_DEFEATED_DESC")
+		btn.text = "✖ " + TranslationManager.t("BOSS_DEFEATED_BTN")

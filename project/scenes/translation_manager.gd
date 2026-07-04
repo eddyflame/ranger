@@ -78,6 +78,10 @@ var dictionary := {
 	"SHOP_NEXT_ARMOR": { "en": "Next -> DEF: +%d\nHP: +%d", "zh": "Next -> DEF: +%d\nHP: +%d" },
 	"SHOP_UPGRADE_COST_MAX": { "en": "Max Level", "zh": "最高等级" },
 	"SHOP_SHELF_RANDOM_STATS": { "en": "Stats are rolled upon purchase.", "zh": "购买后随机产生属性数值。" },
+	"BOSS_DEFEATED_TITLE": { "en": "Boss Defeated!", "zh": "领主已击败！" },
+	"BOSS_DEFEATED_DESC": { "en": "The exit portal has appeared at the far edge of the map. You can continue exploring the map and picking up remaining loot.\n\nWhen you are ready to advance, step into the portal!", "zh": "通关传送门已在地图最右侧边缘开启。\n您可以继续留在地图中探索并捡取地上的战利品。\n准备就绪后，请走向地图最右侧的传送门前往下一关！" },
+	"BOSS_DEFEATED_BTN": { "en": "Continue Exploring", "zh": "继续探索" },
+	"SHOP_OWNED": { "en": "Owned", "zh": "已拥有" },
 	"SET_CHAMPION": {
 		"en": "\n[Champion Set]\n- 2-pc: Phys Dmg +15%\n- 3-pc: Crit Rate +20%",
 		"zh": "\n[勇者套装 (Champion)]\n- 2件: 物理伤害提升 15%\n- 3件: 物理暴击率提升 20%"

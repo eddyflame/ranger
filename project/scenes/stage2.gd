@@ -418,6 +418,7 @@ func _on_enemy_died(enemy_node):
 	if hud:
 		if is_boss:
 			hud.feed_boss_kill()
+			hud.show_boss_defeated_notice()
 		else:
 			hud.feed_kill(enemy_node.character_name)
 
