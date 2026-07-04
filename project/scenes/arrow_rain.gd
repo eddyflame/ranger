@@ -23,8 +23,8 @@ func _ready():
 	tick_timer.timeout.connect(_on_tick_timeout)
 	add_child(tick_timer)
 	
-	# Play initial shoot sound effect
-	SynthAudio.play_shoot(self)
+	# Play initial arrow rain sound effect
+	SynthAudio.play_arrow_rain(self)
 	
 	# Pulse animation update
 	queue_redraw()

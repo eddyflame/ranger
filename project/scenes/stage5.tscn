@@ -34,7 +34,7 @@ width = 2.0
 default_color = Color(1, 0.2, 0.2, 0.1)
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(50, 375)
+position = Vector2(50, 275)
 
 [node name="Enemy_Wolf1" parent="." instance=ExtResource("3_enemy")]
 position = Vector2(250, 350)

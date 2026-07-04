@@ -18,6 +18,7 @@ var OUTLINE_POINTS := PackedVector2Array([
 ])
 
 func _ready():
+	SynthAudioManager.set_bgm_mode("explore")
 	# 1. Build Navigation Polygon dynamically from outline points
 	var nav_region = $NavigationRegion2D
 	if nav_region:
@@ -89,7 +90,12 @@ func _ready():
 		if player.has_signal("gold_gained"):
 			player.connect("gold_gained", Callable(self, "_on_player_gold_gained"))
 		if player.has_signal("shot_projectile"):
-			player.connect("shot_projectile", func(): SynthAudio.play_shoot(self))
+			player.connect("shot_projectile", func():
+				if player.get_skill_q_active() and player.mp >= 8.0:
+					SynthAudio.play_searing_arrow(self)
+				else:
+					SynthAudio.play_shoot(self)
+			)
 		if player.has_signal("blinked"):
 			player.connect("blinked", Callable(self, "_on_player_blinked"))
 		if player.has_signal("level_up"):
@@ -224,7 +230,21 @@ func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
 	else:
 		SaveSystem.spawn_hit_sparks(self, victim.global_position)
 		var color = Color(0.85, 0.15, 0.15) if victim == player else Color(1.0, 1.0, 1.0)
-		spawn_floating_text(victim.global_position + Vector2(randf_range(-15, 15), -45), "-%d" % int(amount), color)
+		var text_prefix = ""
+		if attacker and attacker.has_meta("last_hit_was_crit") and attacker.get_meta("last_hit_was_crit"):
+			attacker.remove_meta("last_hit_was_crit")
+			color = Color(1.0, 0.15, 0.15)
+			text_prefix = "暴击 "
+			if victim == player:
+				player.call("trigger_shake", 12.0, 0.3)
+			else:
+				if player: player.call("trigger_shake", 8.0, 0.2)
+
+		spawn_floating_text(victim.global_position + Vector2(randf_range(-15, 15), -45), "%s-%d" % [text_prefix, int(amount)], color)
+		if text_prefix == "暴击 ":
+			SynthAudio.play_crit(self)
+		else:
+			SynthAudio.play_hit(self)
 
 func _on_character_healed(amount: float, victim: Node):
 	spawn_floating_text(victim.global_position + Vector2(0, -45), "+%d HP" % int(amount), Color(0.2, 0.9, 0.2))
@@ -259,7 +279,8 @@ func _on_player_level_up():
 		if lvl_up_p:
 			var particles = lvl_up_p.instantiate()
 			player.add_child(particles)
-		SynthAudio.play_gold(self)
+		# Play epic level up fanfare sound
+		SynthAudio.play_level_up(self)
 
 func spawn_floating_text(pos: Vector2, text: String, color: Color):
 	var lbl = Label.new()

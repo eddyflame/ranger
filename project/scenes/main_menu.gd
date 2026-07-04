@@ -29,6 +29,7 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var lbl_name5 = $CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/Name
 
 func _ready():
+	SynthAudioManager.set_bgm_mode("menu")
 	var max_unlocked = 1
 	var save_path = "user://rangers_path_save.json"
 	if FileAccess.file_exists(save_path):

@@ -19,6 +19,7 @@ var OUTLINE_POINTS := PackedVector2Array([
 ])
 
 func _ready():
+	SynthAudioManager.set_bgm_mode("explore")
 	# 1. Build Navigation Polygon dynamically from outline points
 	var nav_region = $NavigationRegion2D
 	if nav_region:
@@ -92,7 +93,12 @@ func _ready():
 		if player.has_signal("gold_gained"):
 			player.connect("gold_gained", Callable(self, "_on_player_gold_gained"))
 		if player.has_signal("shot_projectile"):
-			player.connect("shot_projectile", func(): SynthAudio.play_shoot(self))
+			player.connect("shot_projectile", func():
+				if player.get_skill_q_active() and player.mp >= 8.0:
+					SynthAudio.play_searing_arrow(self)
+				else:
+					SynthAudio.play_shoot(self)
+			)
 		if player.has_signal("blinked"):
 			player.connect("blinked", Callable(self, "_on_player_blinked"))
 		if player.has_signal("level_up"):
@@ -183,7 +189,10 @@ func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
 		color = Color(1.0, 0.2, 0.2)
 		
 	spawn_floating_text(victim.global_position + Vector2(0, -20), "%s-%d%s" % [text_prefix, int(amount), block_suffix], color)
-	SynthAudio.play_hit(self)
+	if text_prefix == "暴击 ":
+		SynthAudio.play_crit(self)
+	else:
+		SynthAudio.play_hit(self)
 	
 	if victim == player:
 		player.call("trigger_shake", 6.0, 0.15)
@@ -281,7 +290,8 @@ func _on_player_level_up(new_level: int):
 		player.call("trigger_shake", 10.0, 0.3)
 		spawn_floating_text(player.global_position + Vector2(0, -50), "★ LEVEL UP! ★", Color(1.0, 0.85, 0.15))
 		
-	SynthAudio.play_heal(self)
+	# Play epic level up fanfare sound
+	SynthAudio.play_level_up(self)
 
 func _respawn_enemies():
 	var living = get_tree().get_nodes_in_group("enemies")

@@ -516,6 +516,7 @@ func _on_victory():
 		btn_restart.text = "重新开始游戏 (Restart Game)"
 
 func _on_next_stage_pressed():
+	var current_scene = get_tree().current_scene.scene_file_path
 	if player:
 		if current_scene.contains("main.tscn"):
 			SaveSystem.save_game(player, 2)
