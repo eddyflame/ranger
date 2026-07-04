@@ -1,0 +1,74 @@
+[gd_scene load_steps=7 format=3 uid="uid://dabyssboss"]
+
+[ext_resource type="Script" path="res://scenes/enemy_health_bar.gd" id="1_bar"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_abyssboss"]
+radius = 40.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0, 0, 0, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
+bg_color = Color(0.85, 0.15, 0.15, 1)
+
+[node name="AbyssBoss" type="AbyssBoss"]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 3
+aggro_range = 400.0
+attack_range = 250.0
+xp_reward = 800
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_abyssboss")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+path_desired_distance = 15.0
+target_desired_distance = 15.0
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Shadow" type="Polygon2D" parent="Visual"]
+color = Color(0, 0, 0, 0.3)
+polygon = PackedVector2Array(40, 0, 28, 16, 0, 22, -28, 16, -40, 0, -28, -16, 0, -22, 28, -16)
+
+[node name="Cloak" type="Polygon2D" parent="Visual"]
+color = Color(0.1, 0.05, 0.25, 1)
+polygon = PackedVector2Array(25, 20, 15, -40, -15, -40, -25, 20, -10, 30, 10, 30)
+
+[node name="Trim" type="Polygon2D" parent="Visual"]
+color = Color(0.18, 0.8, 0.8, 1)
+polygon = PackedVector2Array(15, -40, 20, -15, -20, -15, -15, -40)
+
+[node name="Head" type="Polygon2D" parent="Visual"]
+position = Vector2(0, -48)
+color = Color(0.08, 0.04, 0.15, 1)
+polygon = PackedVector2Array(12, 0, 8, 8, 0, 12, -8, 8, -12, 0, -8, -8, 0, -12, 8, -8)
+
+[node name="Crown" type="Polygon2D" parent="Visual"]
+position = Vector2(0, -60)
+color = Color(0.9, 0.75, 0.1, 1)
+polygon = PackedVector2Array(10, 4, 15, -12, 5, -4, 0, -18, -5, -4, -15, -12, -10, 4)
+
+[node name="Staff" type="Line2D" parent="Visual"]
+points = PackedVector2Array(-25, 25, -20, -55)
+width = 4.0
+default_color = Color(0.3, 0.2, 0.1, 1)
+
+[node name="StaffOrb" type="Polygon2D" parent="Visual/Staff"]
+position = Vector2(-20, -60)
+color = Color(0.2, 0.9, 0.9, 0.95)
+polygon = PackedVector2Array(8, 0, 5, 5, 0, 8, -5, 5, -8, 0, -5, -5, 0, -8, 5, -5)
+
+[node name="HPBar" type="ProgressBar" parent="."]
+visible = false
+z_index = 5
+offset_left = -40.0
+offset_top = -95.0
+offset_right = 40.0
+offset_bottom = -88.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
+value = 100.0
+show_percentage = false
+script = ExtResource("1_bar")

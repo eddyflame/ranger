@@ -1,0 +1,129 @@
+[gd_scene load_steps=7 format=3 uid="uid://dspiderqueen"]
+
+[ext_resource type="Script" path="res://scenes/enemy_health_bar.gd" id="1_bar"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_spiderqueen"]
+radius = 45.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0, 0, 0, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
+bg_color = Color(0.85, 0.15, 0.15, 1)
+
+[node name="SpiderQueen" type="SpiderQueen"]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 3
+aggro_range = 300.0
+attack_range = 100.0
+xp_reward = 350
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_spiderqueen")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+path_desired_distance = 15.0
+target_desired_distance = 15.0
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Shadow" type="Polygon2D" parent="Visual"]
+color = Color(0, 0, 0, 0.3)
+polygon = PackedVector2Array(60, 0, 42, 24, 0, 32, -42, 24, -60, 0, -42, -24, 0, -32, 42, -24)
+
+[node name="Abdomen" type="Polygon2D" parent="Visual"]
+position = Vector2(0, 15)
+color = Color(0.12, 0.08, 0.18, 1)
+polygon = PackedVector2Array(45, 0, 35, 35, 0, 50, -35, 35, -45, 0, -35, -35, 0, -45, 35, -35)
+
+[node name="Cephalothorax" type="Polygon2D" parent="Visual"]
+position = Vector2(0, -25)
+color = Color(0.08, 0.05, 0.12, 1)
+polygon = PackedVector2Array(25, 0, 18, 18, 0, 25, -18, 18, -25, 0, -18, -18, 0, -25, 18, -18)
+
+[node name="FangLeft" type="Polygon2D" parent="Visual"]
+position = Vector2(-8, -45)
+color = Color(0.85, 0.15, 0.15, 1)
+polygon = PackedVector2Array(-3, 0, 3, 0, 6, -15, -3, -15)
+
+[node name="FangRight" type="Polygon2D" parent="Visual"]
+position = Vector2(8, -45)
+color = Color(0.85, 0.15, 0.15, 1)
+polygon = PackedVector2Array(-3, 0, 3, 0, 3, -15, -6, -15)
+
+[node name="EyeGroup" type="Node2D" parent="Visual"]
+position = Vector2(0, -35)
+
+[node name="Eye1" type="Polygon2D" parent="Visual/EyeGroup"]
+position = Vector2(-12, -5)
+color = Color(1, 0.1, 0.1, 1)
+polygon = PackedVector2Array(2, 0, 0, 2, -2, 0, 0, -2)
+
+[node name="Eye2" type="Polygon2D" parent="Visual/EyeGroup"]
+position = Vector2(-4, -8)
+color = Color(1, 0.1, 0.1, 1)
+polygon = PackedVector2Array(2.5, 0, 0, 2.5, -2.5, 0, 0, -2.5)
+
+[node name="Eye3" type="Polygon2D" parent="Visual/EyeGroup"]
+position = Vector2(4, -8)
+color = Color(1, 0.1, 0.1, 1)
+polygon = PackedVector2Array(2.5, 0, 0, 2.5, -2.5, 0, 0, -2.5)
+
+[node name="Eye4" type="Polygon2D" parent="Visual/EyeGroup"]
+position = Vector2(12, -5)
+color = Color(1, 0.1, 0.1, 1)
+polygon = PackedVector2Array(2, 0, 0, 2, -2, 0, 0, -2)
+
+[node name="LegL1" type="Line2D" parent="Visual"]
+points = PackedVector2Array(-10, -20, -55, -45, -75, -25)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegL2" type="Line2D" parent="Visual"]
+points = PackedVector2Array(-15, -5, -65, -15, -80, 5)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegL3" type="Line2D" parent="Visual"]
+points = PackedVector2Array(-15, 10, -60, 15, -75, 35)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegL4" type="Line2D" parent="Visual"]
+points = PackedVector2Array(-10, 25, -50, 40, -60, 65)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegR1" type="Line2D" parent="Visual"]
+points = PackedVector2Array(10, -20, 55, -45, 75, -25)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegR2" type="Line2D" parent="Visual"]
+points = PackedVector2Array(15, -5, 65, -15, 80, 5)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegR3" type="Line2D" parent="Visual"]
+points = PackedVector2Array(15, 10, 60, 15, 75, 35)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="LegR4" type="Line2D" parent="Visual"]
+points = PackedVector2Array(10, 25, 50, 40, 60, 65)
+width = 4.0
+default_color = Color(0.08, 0.05, 0.12, 1)
+
+[node name="HPBar" type="ProgressBar" parent="."]
+visible = false
+z_index = 5
+offset_left = -45.0
+offset_top = -100.0
+offset_right = 45.0
+offset_bottom = -93.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
+value = 100.0
+show_percentage = false
+script = ExtResource("1_bar")

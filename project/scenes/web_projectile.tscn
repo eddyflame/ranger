@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3 uid="uid://dwebprojectile"]
+
+[node name="WebProjectile" type="Projectile"]
+is_web = true
+
+[node name="WebBody" type="Polygon2D" parent="."]
+color = Color(0.65, 0.25, 0.85, 0.85)
+polygon = PackedVector2Array(-8, -4, -4, -8, 4, -8, 8, -4, 8, 4, 4, 8, -4, 8, -8, 4)
+
+[node name="WebCore" type="Polygon2D" parent="."]
+color = Color(0.2, 0.9, 0.4, 0.9)
+polygon = PackedVector2Array(-4, -2, -2, -4, 2, -4, 4, -2, 4, 2, 2, 4, -2, 4, -4, 2)
+
+[node name="WebLine1" type="Line2D" parent="."]
+points = PackedVector2Array(-10, -10, 10, 10)
+width = 1.0
+default_color = Color(0.65, 0.25, 0.85, 0.5)
+
+[node name="WebLine2" type="Line2D" parent="."]
+points = PackedVector2Array(-10, 10, 10, -10)
+width = 1.0
+default_color = Color(0.65, 0.25, 0.85, 0.5)

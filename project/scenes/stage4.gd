@@ -3,42 +3,51 @@ extends Node2D
 const SynthAudio = preload("res://scenes/synth_audio.gd")
 const SaveSystem = preload("res://scenes/save_system.gd")
 
-@onready var wolf1 = $Enemy_Wolf1
-@onready var wolf2 = $Enemy_Wolf2
-@onready var wolf3 = $Enemy_Wolf3
 @onready var player = $Player
 
-# Enemy respawn data: store their scene path and original position
+# Enemy respawn data
 var enemy_spawn_data: Array = []
 var respawn_timer: Timer = null
 
-# Static road outlines to prevent get_outline count out of bounds crashes
+# Winding path outline points
 var OUTLINE_POINTS := PackedVector2Array([
-	Vector2(0, 150), Vector2(400, 150), Vector2(400, 250), Vector2(600, 250),
-	Vector2(600, 100), Vector2(1000, 100), Vector2(1000, 250), Vector2(1200, 250),
-	Vector2(1200, 150), Vector2(1600, 150), Vector2(1600, 450), Vector2(1200, 450),
-	Vector2(1200, 350), Vector2(1000, 350), Vector2(1000, 500), Vector2(600, 500),
-	Vector2(600, 350), Vector2(400, 350), Vector2(400, 450), Vector2(0, 450)
+	Vector2(0, 250), Vector2(400, 250), Vector2(400, 100), Vector2(800, 100),
+	Vector2(800, 200), Vector2(1100, 200), Vector2(1100, 100), Vector2(1300, 100),
+	Vector2(1300, 150), Vector2(1600, 150), Vector2(1600, 450), Vector2(1300, 450),
+	Vector2(1300, 350), Vector2(1100, 350), Vector2(1100, 500), Vector2(800, 500),
+	Vector2(800, 350), Vector2(400, 350), Vector2(400, 500), Vector2(0, 500)
 ])
 
 func _ready():
+	# 1. Build Navigation Polygon dynamically from outline points
+	var nav_region = $NavigationRegion2D
+	if nav_region:
+		var nav_poly = NavigationPolygon.new()
+		nav_poly.add_outline(OUTLINE_POINTS)
+		nav_poly.make_polygons_from_outlines()
+		nav_region.navigation_polygon = nav_poly
+		# NavigationRegion2D bakes automatically on ready with GDExtension bindings in Godot 4.7
+
 	if player:
 		if not SaveSystem.load_game(player):
-			# Baseline starting stats for Stage 1 (fresh level 1, 1 skill point)
+			# Baseline stats for starting Stage 4 directly (Level 1 reset, 1 skill point)
 			player.set_level(1)
-			player.set_xp(0)
-			player.set_gold(0)
 			player.set_skill_points(1)
-			player.set_inventory([{}, {}, {}, {}, {}, {}, {}, {}])
-	print("--- MAIN READY: PRINTING CHILDREN ---")
-	for child in get_children():
-		print("Child Name: ", child.name, " | Class: ", child.get_class(), " | Position: ", child.position if child is Node2D else "N/A")
-	print("-------------------------------------")
-	
-	# 1. Draw ground road visuals matching path
+			player.set_gold(300)
+			var starter_inv = [
+				{"name": "Furious Blade", "type": "weapon", "atk_bonus": 10.0, "description": "+10 ATK."},
+				{"name": "Chainmail", "type": "armor", "def_bonus": 2.0, "hp_bonus": 50.0, "description": "+2 DEF, +50 HP."},
+				{"name": "Potion of Healing", "type": "potion", "hp_restore": 150.0, "description": "Consumable. Restores 150 HP."},
+				{}, {}, {}, {}, {}
+			]
+			player.set_inventory(starter_inv)
+			player.set_hp(player.get_total_max_hp())
+			player.set_mp(player.get_total_max_mp())
+
+	# 2. Draw ground road visuals matching path
 	create_road_visual()
 	
-	# 2. Spawn forest border walls
+	# 3. Spawn forest border walls
 	spawn_forest_borders()
 
 	# Record enemy spawn info for 5-minute respawn
@@ -51,7 +60,7 @@ func _ready():
 
 	# Setup 5-minute respawn timer
 	respawn_timer = Timer.new()
-	respawn_timer.wait_time = 300.0  # 5 minutes
+	respawn_timer.wait_time = 300.0
 	respawn_timer.one_shot = false
 	respawn_timer.autostart = true
 	respawn_timer.timeout.connect(_respawn_enemies)
@@ -71,6 +80,11 @@ func _ready():
 		if child.is_in_group("enemies") and child.has_signal("died"):
 			child.connect("died", Callable(self, "_on_enemy_died").bind(child))
 			
+	# Connect Spider Queen minion spawn signal
+	var boss = get_node_or_null("Boss")
+	if boss and boss.has_signal("minion_spawned"):
+		boss.connect("minion_spawned", Callable(self, "_on_boss_minion_spawned"))
+
 	# Connect XP, gold, shoot, blink, level up signals on player
 	if player:
 		if player.has_signal("xp_gained"):
@@ -87,18 +101,15 @@ func _ready():
 		if player.has_signal("died"):
 			player.connect("died", Callable(self, "_on_player_died"))
 
-
 func _on_player_died():
 	var gm = get_node_or_null("GameManager")
 	if gm:
 		gm.trigger_game_over()
-	
-
 
 func create_road_visual():
 	var road = Polygon2D.new()
 	road.polygon = OUTLINE_POINTS
-	road.color = Color(0.18, 0.16, 0.13, 1.0) # Sleek modern dark road gravel
+	road.color = Color(0.14, 0.08, 0.16, 1.0) # Sleek modern dark purple gravel road for spider level
 	road.z_index = -8
 	add_child(road)
 	
@@ -108,7 +119,7 @@ func create_road_visual():
 	# Close the line path loop
 	road_border.add_point(OUTLINE_POINTS[0])
 	road_border.width = 3.0
-	road_border.default_color = Color(0.24, 0.22, 0.18, 1.0)
+	road_border.default_color = Color(0.20, 0.12, 0.22, 1.0)
 	road_border.z_index = -7
 	add_child(road_border)
 
@@ -130,14 +141,11 @@ func spawn_forest_borders():
 		
 		for j in range(steps):
 			var spawn_pos = p1 + dir_norm * (j * step_dist)
-			# Push the tree outwards to clear the road/navigation area from colliders
 			spawn_pos += outward_normal * 18.0
-			# Random offset for a natural organic layout
 			spawn_pos += Vector2(randf_range(-6, 6), randf_range(-6, 6))
 			
 			var tree_inst = tree_scene.instantiate()
 			tree_inst.global_position = spawn_pos
-			# Add random visual sizes
 			var scale_factor = randf_range(0.85, 1.2)
 			tree_inst.get_node("Visual").scale = Vector2(scale_factor, scale_factor)
 			add_child(tree_inst)
@@ -193,6 +201,7 @@ func _on_player_xp_gained(amount: int):
 func _on_player_gold_gained(amount: int):
 	if amount <= 0: return
 	spawn_floating_text(player.global_position + Vector2(0, -30), "+%d 金币" % amount, Color(0.95, 0.8, 0.15))
+	SynthAudio.play_gold(self)
 
 func spawn_floating_text(pos: Vector2, text: String, color: Color):
 	var label = Label.new()
@@ -205,18 +214,15 @@ func spawn_floating_text(pos: Vector2, text: String, color: Color):
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.z_index = 100
 	
-	# Small random offset so texts don't stack perfectly
 	label.global_position = pos + Vector2(randf_range(-15, 15), randf_range(-10, 10))
 	add_child(label)
 	
 	var tween = create_tween()
-	# Float upwards and fade out
 	tween.tween_property(label, "global_position", label.global_position + Vector2(0, -50), 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.7)
 	tween.tween_callback(label.queue_free)
 
 func _on_boss_stomped(pos: Vector2, radius: float, boss_node: Node):
-	# Create a visual shockwave expanding ring
 	var stomp_ring = Line2D.new()
 	var points = PackedVector2Array()
 	var segments = 32
@@ -225,16 +231,15 @@ func _on_boss_stomped(pos: Vector2, radius: float, boss_node: Node):
 		points.append(Vector2(cos(angle), sin(angle)))
 	stomp_ring.points = points
 	stomp_ring.width = 4.0
-	stomp_ring.default_color = Color(1.0, 0.45, 0.2, 0.8) # bright warning orange
+	stomp_ring.default_color = Color(0.9, 0.3, 0.95, 0.8) # Purple-pink boss stomp shockwave
 	stomp_ring.global_position = pos
-	stomp_ring.scale = Vector2(5.0, 5.0) # Start small
+	stomp_ring.scale = Vector2(5.0, 5.0)
 	stomp_ring.z_index = -3
 	add_child(stomp_ring)
 	
-	spawn_floating_text(pos + Vector2(0, -70), "WAR STOMP!", Color(1.0, 0.25, 0.1))
+	spawn_floating_text(pos + Vector2(0, -70), "STOMP!", Color(0.9, 0.3, 0.95))
 	
 	var tween = create_tween()
-	# Expand to stomp radius and fade out
 	tween.tween_property(stomp_ring, "scale", Vector2(radius, radius), 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(stomp_ring, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(stomp_ring.queue_free)
@@ -248,7 +253,6 @@ func _on_player_blinked(from: Vector2, to: Vector2):
 	if player:
 		player.call("trigger_shake", 8.0, 0.18)
 		
-	# Spawn particle puffs at start and end
 	var p_scene = preload("res://scenes/blink_particles.tscn")
 	var p1 = p_scene.instantiate()
 	p1.global_position = from
@@ -258,7 +262,6 @@ func _on_player_blinked(from: Vector2, to: Vector2):
 	p2.global_position = to
 	add_child(p2)
 	
-	# Draw brief purple lightning arc
 	var line = Line2D.new()
 	line.points = [from, to]
 	line.width = 4.0
@@ -271,7 +274,6 @@ func _on_player_blinked(from: Vector2, to: Vector2):
 	tween.tween_callback(line.queue_free)
 
 func _on_player_level_up(new_level: int):
-	# Rising sparkles particle beam attached to player
 	var p_scene = preload("res://scenes/level_up_particles.tscn")
 	var p = p_scene.instantiate()
 	if player:
@@ -279,11 +281,9 @@ func _on_player_level_up(new_level: int):
 		player.call("trigger_shake", 10.0, 0.3)
 		spawn_floating_text(player.global_position + Vector2(0, -50), "★ LEVEL UP! ★", Color(1.0, 0.85, 0.15))
 		
-	# Play dynamic arpeggio sound
 	SynthAudio.play_heal(self)
 
 func _respawn_enemies():
-	# Only respawn if no living enemies remain
 	var living = get_tree().get_nodes_in_group("enemies")
 	if living.size() > 0:
 		return
@@ -295,7 +295,6 @@ func _respawn_enemies():
 			var enemy_inst = enemy_scene.instantiate()
 			enemy_inst.global_position = spawn.position
 			add_child(enemy_inst)
-			# Connect signals for the new instance
 			if enemy_inst.has_signal("damage_taken"):
 				enemy_inst.connect("damage_taken", Callable(self, "_on_character_damage_taken").bind(enemy_inst))
 			if enemy_inst.has_signal("healed"):
@@ -306,6 +305,19 @@ func _respawn_enemies():
 				enemy_inst.connect("slow_applied", Callable(self, "_on_character_slow_applied").bind(enemy_inst))
 			if enemy_inst.is_in_group("enemies") and enemy_inst.has_signal("died"):
 				enemy_inst.connect("died", Callable(self, "_on_enemy_died").bind(enemy_inst))
+
+func _on_boss_minion_spawned(minion_node):
+	if minion_node:
+		# Add to group so HUD can detect and manage
+		minion_node.add_to_group("enemies")
+		if minion_node.has_signal("damage_taken"):
+			minion_node.connect("damage_taken", Callable(self, "_on_character_damage_taken").bind(minion_node))
+		if minion_node.has_signal("healed"):
+			minion_node.connect("healed", Callable(self, "_on_character_healed").bind(minion_node))
+		if minion_node.has_signal("slow_applied"):
+			minion_node.connect("slow_applied", Callable(self, "_on_character_slow_applied").bind(minion_node))
+		if minion_node.has_signal("died"):
+			minion_node.connect("died", Callable(self, "_on_enemy_died").bind(minion_node))
 
 func _on_enemy_died(enemy_node):
 	if not enemy_node: return
@@ -320,13 +332,11 @@ func _on_enemy_died(enemy_node):
 			hud.feed_kill(enemy_node.character_name)
 
 	if is_boss:
-		# Boss drops 3 items scattered around its death position
 		for i in range(3):
 			var loot = SaveSystem.generate_graded_loot(true)
 			var scatter = Vector2(randf_range(-60, 60), randf_range(-40, 40))
 			SaveSystem.spawn_loot_drop(self, death_pos + scatter, loot)
 			SaveSystem.register_unlocked_item(loot)
-		# Delay victory by 6 seconds so player can pick up drops
 		spawn_floating_text(death_pos + Vector2(0, -80), "🎉 Boss已击杀！6秒后通关…", Color(1.0, 0.85, 0.15))
 		var delay_timer = get_tree().create_timer(6.0)
 		delay_timer.timeout.connect(func():

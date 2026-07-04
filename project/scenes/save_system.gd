@@ -21,6 +21,10 @@ static func save_game(player: Node2D, next_level_override: int = -1) -> void:
 				level_index = 2
 			elif path.contains("stage3"):
 				level_index = 3
+			elif path.contains("stage4"):
+				level_index = 4
+			elif path.contains("stage5"):
+				level_index = 5
 			else:
 				level_index = 1
 	
@@ -53,6 +57,11 @@ static func save_game(player: Node2D, next_level_override: int = -1) -> void:
 		"skill_q_level": player.get_skill_q_level(),
 		"skill_w_level": player.get_skill_w_level(),
 		"skill_e_level": player.get_skill_e_level(),
+		"skill_r_level": player.get_skill_r_level(),
+		"talent_crit_level": player.get_talent_crit_level(),
+		"talent_evasion_level": player.get_talent_evasion_level(),
+		"talent_lifesteal_level": player.get_talent_lifesteal_level(),
+		"talent_speed_level": player.get_talent_speed_level(),
 		"inventory": player.get_inventory(),
 		"unlocked_shop_items": unlocked_shop_items
 	}
@@ -101,6 +110,11 @@ static func load_game(player: Node2D) -> bool:
 		player.set_skill_q_level(int(save_data.get("skill_q_level", 0)))
 		player.set_skill_w_level(int(save_data.get("skill_w_level", 0)))
 		player.set_skill_e_level(int(save_data.get("skill_e_level", 0)))
+		player.set_skill_r_level(int(save_data.get("skill_r_level", 0)))
+		player.set_talent_crit_level(int(save_data.get("talent_crit_level", 0)))
+		player.set_talent_evasion_level(int(save_data.get("talent_evasion_level", 0)))
+		player.set_talent_lifesteal_level(int(save_data.get("talent_lifesteal_level", 0)))
+		player.set_talent_speed_level(int(save_data.get("talent_speed_level", 0)))
 	else:
 		# Reset progression to level 1 with 1 skill point for starting/restarting a stage
 		player.set_level(1)
@@ -112,6 +126,11 @@ static func load_game(player: Node2D) -> bool:
 		player.set_skill_q_level(0)
 		player.set_skill_w_level(0)
 		player.set_skill_e_level(0)
+		player.set_skill_r_level(0)
+		player.set_talent_crit_level(0)
+		player.set_talent_evasion_level(0)
+		player.set_talent_lifesteal_level(0)
+		player.set_talent_speed_level(0)
 		
 	# Reset the continue flag after loading is done
 	is_continuing = false
@@ -151,19 +170,28 @@ static func generate_graded_loot(is_boss: bool) -> Dictionary:
 	var weapons = [
 		{"name": "铁木长弓 (Elven Bow)", "type": "weapon", "atk_bonus": 6.0, "description": "+%d 点攻击力。"},
 		{"name": "淬毒钢爪 (Poisoned Claws)", "type": "weapon", "atk_bonus": 8.0, "description": "+%d 点攻击力。"},
-		{"name": "狂暴之刃 (Furious Blade)", "type": "weapon", "atk_bonus": 10.0, "description": "+%d 点攻击力。"}
+		{"name": "狂暴之刃 (Furious Blade)", "type": "weapon", "atk_bonus": 10.0, "description": "+%d 点攻击力。"},
+		{"name": "勇者之剑 (Champion Sword)", "type": "weapon", "atk_bonus": 12.0, "set_name": "champion", "set_item_id": "champion_sword", "description": "+%d 物理攻击。"},
+		{"name": "影刃匕首 (Shadow Dagger)", "type": "weapon", "atk_bonus": 9.0, "set_name": "shadow", "set_item_id": "shadow_dagger", "description": "+%d 物理攻击。"},
+		{"name": "熔岩大剑 (Lava Greatsword)", "type": "weapon", "atk_bonus": 14.0, "set_name": "lava", "set_item_id": "lava_greatsword", "description": "+%d 物理攻击。"}
 	]
 	var armors = [
 		{"name": "锁子硬甲 (Chainmail)", "type": "armor", "def_bonus": 2.0, "hp_bonus": 50.0, "description": "+%d 护甲, +%d 生命值。"},
 		{"name": "皮质圆盾 (Leather Shield)", "type": "armor", "def_bonus": 3.0, "description": "+%d 点护甲保护。"},
-		{"name": "精钢护板 (Steel Plate)", "type": "armor", "def_bonus": 4.0, "hp_bonus": 100.0, "description": "+%d 护甲, +%d 生命值。"}
+		{"name": "精钢护板 (Steel Plate)", "type": "armor", "def_bonus": 4.0, "hp_bonus": 100.0, "description": "+%d 护甲, +%d 生命值。"},
+		{"name": "勇者胸甲 (Champion Chestplate)", "type": "armor", "def_bonus": 3.0, "hp_bonus": 60.0, "set_name": "champion", "set_item_id": "champion_breastplate", "description": "+%d 物理防护, +%d 生命上限。"},
+		{"name": "影之皮甲 (Shadow Leather)", "type": "armor", "def_bonus": 2.0, "hp_bonus": 45.0, "set_name": "shadow", "set_item_id": "shadow_leather", "description": "+%d 物理防护, +%d 生命上限。"},
+		{"name": "熔岩重铠 (Lava Iron Armor)", "type": "armor", "def_bonus": 4.5, "hp_bonus": 110.0, "set_name": "lava", "set_item_id": "lava_iron_armor", "description": "+%d 物理防护, +%d 生命上限。"}
 	]
 	var boots = [
 		{"name": "野外软鞋 (Wild Boots)", "type": "boots", "speed_bonus": 30.0, "description": "+%d 点移动速度。"},
-		{"name": "飞燕战靴 (Swift Boots)", "type": "boots", "speed_bonus": 50.0, "description": "+%d 点移动速度。"}
+		{"name": "飞燕战靴 (Swift Boots)", "type": "boots", "speed_bonus": 50.0, "description": "+%d 点移动速度。"},
+		{"name": "影舞战靴 (Shadow Boots)", "type": "boots", "speed_bonus": 55.0, "set_name": "shadow", "set_item_id": "shadow_boots", "description": "+%d 点移动速度。"}
 	]
 	var crests = [
-		{"name": "猎手徽章 (Hunter's Sigil)", "type": "crest", "atk_bonus": 8.0, "hp_bonus": 80.0, "speed_bonus": 25.0, "description": "+%d 攻击, +%d 生命, +%d 速度。"}
+		{"name": "猎手徽章 (Hunter's Sigil)", "type": "crest", "atk_bonus": 8.0, "hp_bonus": 80.0, "speed_bonus": 25.0, "description": "+%d 攻击, +%d 生命, +%d 速度。"},
+		{"name": "勇者徽章 (Champion Sigil)", "type": "crest", "atk_bonus": 6.0, "hp_bonus": 40.0, "set_name": "champion", "set_item_id": "champion_sigil", "description": "+%d 攻击力, +%d 生命值。"},
+		{"name": "火山徽章 (Volcanic Sigil)", "type": "crest", "atk_bonus": 7.0, "hp_bonus": 70.0, "set_name": "lava", "set_item_id": "lava_sigil", "description": "+%d 攻击力, +%d 生命值。"}
 	]
 
 	var roll_cat = randf()
@@ -241,6 +269,10 @@ static func generate_graded_loot(is_boss: bool) -> Dictionary:
 		"grade": grade
 	}
 
+	if selected_template.has("set_name"):
+		item_data["set_name"] = selected_template.set_name
+		item_data["set_item_id"] = selected_template.set_item_id
+
 	var base_atk = selected_template.get("atk_bonus", 0.0)
 	var base_def = selected_template.get("def_bonus", 0.0)
 	var base_hp = selected_template.get("hp_bonus", 0.0)
@@ -308,8 +340,18 @@ static func generate_graded_loot(is_boss: bool) -> Dictionary:
 	if not bonus_descs.is_empty():
 		desc += "\n附加属性:\n" + "\n".join(bonus_descs)
 		
-	item_data["name"] = prefix + selected_template.name
+	if selected_template.has("set_name"):
+		var set_info = ""
+		if selected_template.set_name == "champion":
+			set_info = "\n[勇者套装 (Champion)]\n- 2件: 物理伤害提升 15%\n- 3件: 物理暴击率提升 20%"
+		elif selected_template.set_name == "shadow":
+			set_info = "\n[影武者套装 (Shadow)]\n- 2件: 闪避率提升 15%\n- 3件: 生命吸取提升 15%"
+		elif selected_template.set_name == "lava":
+			set_info = "\n[熔岩守卫套装 (Lava)]\n- 2件: +150生命上限 & +10防御\n- 3件: 末日怒火 (2秒一周围敌30伤)"
+		desc += set_info
+
 	item_data["description"] = desc
+	item_data["name"] = prefix + selected_template.name
 	
 	var base_cost = 40.0
 	if selected_template.type == "crest":
@@ -326,3 +368,11 @@ static func spawn_loot_drop(scene_root: Node, pos: Vector2, item_data: Dictionar
 		drop.set_item_data(item_data)
 		scene_root.add_child(drop)
 		print("[Loot Dropper] Spawned physical drop: ", item_data.name, " at ", pos)
+
+static func spawn_hit_sparks(scene_root: Node, pos: Vector2) -> void:
+	var sparks_scene = load("res://scenes/hit_sparks.tscn")
+	if sparks_scene:
+		var sparks = sparks_scene.instantiate()
+		sparks.global_position = pos
+		scene_root.add_child(sparks)
+

@@ -8,6 +8,8 @@
 #include "hero_player.h"
 #include "enemy.h"
 #include "boss.h"
+#include "spider_queen.h"
+#include "abyss_boss.h"
 #include "projectile.h"
 #include "item_drop.h"
 #include "game_manager.h"
@@ -23,6 +25,8 @@ void initialize_rpg_module(ModuleInitializationLevel p_level) {
     ClassDB::register_class<HeroPlayer>();
     ClassDB::register_class<Enemy>();
     ClassDB::register_class<Boss>();
+    ClassDB::register_class<SpiderQueen>();
+    ClassDB::register_class<AbyssBoss>();
     ClassDB::register_class<Projectile>();
     ClassDB::register_class<ItemDrop>();
     ClassDB::register_class<GameManager>();

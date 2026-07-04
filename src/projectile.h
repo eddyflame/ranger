@@ -18,6 +18,7 @@ private:
     float speed = 350.0f;
     float damage = 10.0f;
     bool is_searing = false;
+    bool is_web = false;
     
     Vector2 last_direction;
 
@@ -51,6 +52,9 @@ public:
 
     void set_searing_effect(bool p_searing);
     bool get_searing_effect() const { return is_searing; }
+
+    void set_web_effect(bool p_web) { is_web = p_web; }
+    bool get_web_effect() const { return is_web; }
 };
 
 } // namespace godot

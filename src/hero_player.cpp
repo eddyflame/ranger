@@ -11,6 +11,7 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/packed_scene.hpp>
 #include <godot_cpp/classes/viewport.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/navigation_server2d.hpp>
@@ -41,8 +42,15 @@ void HeroPlayer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_skill_w_level"), &HeroPlayer::get_skill_w_level);
     ClassDB::bind_method(D_METHOD("get_skill_e_level"), &HeroPlayer::get_skill_e_level);
     ClassDB::bind_method(D_METHOD("get_skill_e_cooldown"), &HeroPlayer::get_skill_e_cooldown);
+    ClassDB::bind_method(D_METHOD("get_skill_r_level"), &HeroPlayer::get_skill_r_level);
+    ClassDB::bind_method(D_METHOD("get_skill_r_cooldown"), &HeroPlayer::get_skill_r_cooldown);
+    ClassDB::bind_method(D_METHOD("get_talent_crit_level"), &HeroPlayer::get_talent_crit_level);
+    ClassDB::bind_method(D_METHOD("get_talent_evasion_level"), &HeroPlayer::get_talent_evasion_level);
+    ClassDB::bind_method(D_METHOD("get_talent_lifesteal_level"), &HeroPlayer::get_talent_lifesteal_level);
+    ClassDB::bind_method(D_METHOD("get_talent_speed_level"), &HeroPlayer::get_talent_speed_level);
     ClassDB::bind_method(D_METHOD("cast_skill_e", "target_pos"), &HeroPlayer::cast_skill_e);
     ClassDB::bind_method(D_METHOD("cast_skill_e_forward"), &HeroPlayer::cast_skill_e_forward);
+    ClassDB::bind_method(D_METHOD("cast_skill_r", "target_pos"), &HeroPlayer::cast_skill_r);
     ClassDB::bind_method(D_METHOD("learn_skill", "skill_name"), &HeroPlayer::learn_skill);
     ClassDB::bind_method(D_METHOD("upgrade_attribute", "attr_name"), &HeroPlayer::upgrade_attribute);
     ClassDB::bind_method(D_METHOD("trigger_shake", "intensity", "duration"), &HeroPlayer::trigger_shake);
@@ -53,6 +61,7 @@ void HeroPlayer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_total_crit_chance"), &HeroPlayer::get_total_crit_chance);
     ClassDB::bind_method(D_METHOD("get_total_evasion_chance"), &HeroPlayer::get_total_evasion_chance);
     ClassDB::bind_method(D_METHOD("get_total_block_amount"), &HeroPlayer::get_total_block_amount);
+    ClassDB::bind_method(D_METHOD("get_set_count", "set_name"), &HeroPlayer::get_set_count);
     
     ClassDB::bind_method(D_METHOD("set_xp", "xp"), &HeroPlayer::set_xp);
     ClassDB::bind_method(D_METHOD("set_skill_points", "skill_points"), &HeroPlayer::set_skill_points);
@@ -60,17 +69,23 @@ void HeroPlayer::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_skill_q_level", "level"), &HeroPlayer::set_skill_q_level);
     ClassDB::bind_method(D_METHOD("set_skill_w_level", "level"), &HeroPlayer::set_skill_w_level);
     ClassDB::bind_method(D_METHOD("set_skill_e_level", "level"), &HeroPlayer::set_skill_e_level);
-
+    ClassDB::bind_method(D_METHOD("set_skill_r_level", "level"), &HeroPlayer::set_skill_r_level);
+    ClassDB::bind_method(D_METHOD("set_talent_crit_level", "level"), &HeroPlayer::set_talent_crit_level);
+    ClassDB::bind_method(D_METHOD("set_talent_evasion_level", "level"), &HeroPlayer::set_talent_evasion_level);
+    ClassDB::bind_method(D_METHOD("set_talent_lifesteal_level", "level"), &HeroPlayer::set_talent_lifesteal_level);
+    ClassDB::bind_method(D_METHOD("set_talent_speed_level", "level"), &HeroPlayer::set_talent_speed_level);
+ 
     ClassDB::bind_method(D_METHOD("set_movement_target", "target"), &HeroPlayer::set_movement_target);
     ClassDB::bind_method(D_METHOD("set_attack_target", "target"), &HeroPlayer::set_attack_target);
     ClassDB::bind_method(D_METHOD("set_pickup_target", "target"), &HeroPlayer::set_pickup_target);
     ClassDB::bind_method(D_METHOD("revive_at_start"), &HeroPlayer::revive_at_start);
     ClassDB::bind_method(D_METHOD("revive_on_spot"), &HeroPlayer::revive_on_spot);
-
+ 
     // Signals
     ADD_SIGNAL(MethodInfo("inventory_changed"));
     ADD_SIGNAL(MethodInfo("xp_changed", PropertyInfo(Variant::INT, "xp"), PropertyInfo(Variant::INT, "xp_to_next_level")));
     ADD_SIGNAL(MethodInfo("skill_w_cooldown_started", PropertyInfo(Variant::FLOAT, "cooldown_time")));
+    ADD_SIGNAL(MethodInfo("skill_r_cooldown_started", PropertyInfo(Variant::FLOAT, "cooldown_time")));
     ADD_SIGNAL(MethodInfo("skills_changed"));
     ADD_SIGNAL(MethodInfo("xp_gained", PropertyInfo(Variant::INT, "amount")));
     ADD_SIGNAL(MethodInfo("shot_projectile"));
@@ -140,13 +155,53 @@ void HeroPlayer::_physics_process(double delta) {
     if (skill_e_cooldown > 0.0f) {
         skill_e_cooldown -= delta;
     }
+    if (skill_r_cooldown > 0.0f) {
+        skill_r_cooldown -= delta;
+    }
+    if (slow_timer > 0.0f) {
+        slow_timer -= delta;
+    }
     if (is_windwalking) {
         skill_w_duration -= delta;
         if (skill_w_duration <= 0.0f) {
             is_windwalking = false;
-            set_modulate(Color(1.0f, 1.0f, 1.0f, 1.0f)); // restore transparency
         }
     }
+
+    // Lava Guard 3-Piece Set Aura: Doom Fury
+    if (get_set_count("lava") >= 3) {
+        lava_aura_timer -= delta;
+        if (lava_aura_timer <= 0.0f) {
+            lava_aura_timer = 2.0f;
+            TypedArray<Node> enemies = get_tree()->get_nodes_in_group("enemies");
+            for (int i = 0; i < enemies.size(); ++i) {
+                Node2D *enemy = Object::cast_to<Node2D>(enemies[i]);
+                if (enemy && !enemy->is_queued_for_deletion()) {
+                    bool enemy_dead = false;
+                    if (enemy->has_method("get_is_dead")) {
+                        enemy_dead = (bool)enemy->call("get_is_dead");
+                    }
+                    if (!enemy_dead && get_global_position().distance_to(enemy->get_global_position()) <= 200.0f) {
+                        if (enemy->has_method("take_damage")) {
+                            enemy->call("take_damage", 30.0f, this);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Dynamic visual modulation for status effects (windwalk transparency and web slow tint)
+    Color mod_color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    if (is_windwalking) {
+        mod_color.a = 0.4f;
+    }
+    if (slow_timer > 0.0f) {
+        mod_color.r = 0.7f;
+        mod_color.g = 0.5f;
+        mod_color.b = 0.9f;
+    }
+    set_modulate(mod_color);
 
     // Slowly regenerate mana: 1.0f + intelligence * 0.05f per second
     float mana_regen = 1.0f + intelligence * 0.05f;
@@ -312,6 +367,10 @@ void HeroPlayer::_unhandled_input(const Ref<InputEvent> &event) {
             return;
         } else if (keycode == KEY_E) {
             cast_skill_e(get_global_mouse_position());
+            get_viewport()->set_input_as_handled();
+            return;
+        } else if (keycode == KEY_R) {
+            cast_skill_r(get_global_mouse_position());
             get_viewport()->set_input_as_handled();
             return;
         }
@@ -515,7 +574,11 @@ float HeroPlayer::get_total_atk() const {
             bonus_atk += (float)slot.get("atk_bonus", 0.0f);
         }
     }
-    return Character::get_total_atk() + bonus_atk;
+    float atk = Character::get_total_atk() + bonus_atk;
+    if (get_set_count("champion") >= 2) {
+        atk *= 1.15f;
+    }
+    return atk;
 }
 
 float HeroPlayer::get_total_def() const {
@@ -526,7 +589,11 @@ float HeroPlayer::get_total_def() const {
             bonus_def += (float)slot.get("def_bonus", 0.0f);
         }
     }
-    return Character::get_total_def() + bonus_def;
+    float def = Character::get_total_def() + bonus_def;
+    if (get_set_count("lava") >= 2) {
+        def += 10.0f;
+    }
+    return def;
 }
 
 float HeroPlayer::get_total_move_speed() const {
@@ -537,9 +604,12 @@ float HeroPlayer::get_total_move_speed() const {
             bonus_speed += (float)slot.get("speed_bonus", 0.0f);
         }
     }
-    float speed = Character::get_total_move_speed() + bonus_speed;
+    float speed = move_speed + bonus_speed + talent_speed_level * 10.0f;
     if (is_windwalking) {
         speed *= (1.0f + 0.10f * skill_w_level); // 10% speed boost per skill level
+    }
+    if (slow_timer > 0.0f) {
+        speed *= 0.5f;
     }
     return speed;
 }
@@ -582,6 +652,26 @@ void HeroPlayer::learn_skill(const String &skill_name) {
         emit_signal("skills_changed");
     } else if (skill_name == "E" && skill_e_level < 4) {
         skill_e_level++;
+        skill_points--;
+        emit_signal("skills_changed");
+    } else if (skill_name == "R" && skill_r_level < 4) {
+        skill_r_level++;
+        skill_points--;
+        emit_signal("skills_changed");
+    } else if (skill_name == "T_CRIT" && talent_crit_level < 4) {
+        talent_crit_level++;
+        skill_points--;
+        emit_signal("skills_changed");
+    } else if (skill_name == "T_EVADE" && talent_evasion_level < 4) {
+        talent_evasion_level++;
+        skill_points--;
+        emit_signal("skills_changed");
+    } else if (skill_name == "T_LIFE" && talent_lifesteal_level < 4) {
+        talent_lifesteal_level++;
+        skill_points--;
+        emit_signal("skills_changed");
+    } else if (skill_name == "T_SPEED" && talent_speed_level < 4) {
+        talent_speed_level++;
         skill_points--;
         emit_signal("skills_changed");
     }
@@ -652,34 +742,43 @@ void HeroPlayer::set_gold(int p_gold) {
 }
 
 float HeroPlayer::get_lifesteal_percent() const {
-    float lifesteal = 0.0f;
+    float lifesteal = talent_lifesteal_level * 0.04f;
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
         Dictionary slot = inventory[i];
         if (!slot.is_empty()) {
             lifesteal += (float)slot.get("lifesteal_percent", 0.0f);
         }
     }
+    if (get_set_count("shadow") >= 3) {
+        lifesteal += 0.15f;
+    }
     return lifesteal;
 }
 
 float HeroPlayer::get_total_crit_chance() const {
-    float total_crit = 0.0f;
+    float total_crit = talent_crit_level * 0.05f;
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
         Dictionary slot = inventory[i];
         if (!slot.is_empty()) {
             total_crit += (float)slot.get("crit_chance", 0.0f);
         }
     }
+    if (get_set_count("champion") >= 3) {
+        total_crit += 0.20f;
+    }
     return total_crit;
 }
 
 float HeroPlayer::get_total_evasion_chance() const {
-    float total_evade = 0.0f;
+    float total_evade = talent_evasion_level * 0.05f;
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
         Dictionary slot = inventory[i];
         if (!slot.is_empty()) {
             total_evade += (float)slot.get("evade_chance", 0.0f);
         }
+    }
+    if (get_set_count("shadow") >= 2) {
+        total_evade += 0.15f;
     }
     return total_evade;
 }
@@ -703,7 +802,30 @@ float HeroPlayer::get_total_max_hp() const {
             bonus_hp += (float)slot.get("hp_bonus", 0.0f);
         }
     }
-    return Character::get_total_max_hp() + bonus_hp;
+    float hp_limit = Character::get_total_max_hp() + bonus_hp;
+    if (get_set_count("lava") >= 2) {
+        hp_limit += 150.0f;
+    }
+    return hp_limit;
+}
+
+int HeroPlayer::get_set_count(const String &set_name) const {
+    int count = 0;
+    Array counted_names;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        Dictionary slot = inventory[i];
+        if (!slot.is_empty()) {
+            String s_name = slot.get("set_name", "");
+            if (s_name == set_name) {
+                String item_id = slot.get("set_item_id", "");
+                if (!item_id.is_empty() && !counted_names.has(item_id)) {
+                    counted_names.append(item_id);
+                    count++;
+                }
+            }
+        }
+    }
+    return count;
 }
 
 void HeroPlayer::die() {
@@ -817,6 +939,54 @@ void HeroPlayer::set_skill_w_level(int p_lvl) {
 
 void HeroPlayer::set_skill_e_level(int p_lvl) {
     skill_e_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_skill_r_level(int p_lvl) {
+    skill_r_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::cast_skill_r(Vector2 target_pos) {
+    if (skill_r_level > 0 && skill_r_cooldown <= 0.0f && mp >= skill_r_mana_cost) {
+        set_mp(mp - skill_r_mana_cost);
+        skill_r_cooldown = skill_r_cooldown_max;
+
+        Ref<PackedScene> rain_scene = ResourceLoader::get_singleton()->load("res://scenes/arrow_rain.tscn");
+        if (rain_scene.is_valid()) {
+            Node *inst = rain_scene->instantiate();
+            Node2D *rain = Object::cast_to<Node2D>(inst);
+            if (rain) {
+                rain->set_global_position(target_pos);
+                float base_damage = 8.0f + skill_r_level * 5.0f;
+                float tick_damage = base_damage + get_total_atk() * 0.25f;
+                rain->call("setup", tick_damage, this);
+                get_parent()->add_child(rain);
+            }
+        }
+
+        emit_signal("skill_r_cooldown_started", skill_r_cooldown_max);
+        emit_signal("skills_changed");
+    }
+}
+
+void HeroPlayer::set_talent_crit_level(int p_lvl) {
+    talent_crit_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_talent_evasion_level(int p_lvl) {
+    talent_evasion_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_talent_lifesteal_level(int p_lvl) {
+    talent_lifesteal_level = p_lvl;
+    emit_signal("skills_changed");
+}
+
+void HeroPlayer::set_talent_speed_level(int p_lvl) {
+    talent_speed_level = p_lvl;
     emit_signal("skills_changed");
 }
 

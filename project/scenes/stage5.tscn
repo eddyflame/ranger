@@ -1,0 +1,104 @@
+[gd_scene load_steps=9 format=3 uid="uid://dstage5"]
+
+[ext_resource type="Script" path="res://scenes/stage5.gd" id="1_stage5"]
+[ext_resource type="PackedScene" uid="uid://dplayer" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://denemy" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" uid="uid://drangedenemy" path="res://scenes/ranged_enemy.tscn" id="4_ranged"]
+[ext_resource type="PackedScene" uid="uid://dabyssboss" path="res://scenes/abyss_boss.tscn" id="5_abyssboss"]
+[ext_resource type="PackedScene" uid="uid://dmerchant" path="res://scenes/merchant.tscn" id="6_merchant"]
+[ext_resource type="PackedScene" uid="uid://dhud" path="res://scenes/hud.tscn" id="7_hud"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_stage5"]
+source_geometry_group_name = &"navigation_polygon_source_group"
+
+[node name="Stage5" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_stage5")
+
+[node name="GameManager" type="GameManager" parent="."]
+
+[node name="Background" type="Node2D" parent="."]
+z_index = -10
+
+[node name="ColorRect" type="ColorRect" parent="Background"]
+mouse_filter = 2
+offset_right = 1600.0
+offset_bottom = 600.0
+color = Color(0.12, 0.02, 0.02, 1)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_stage5")
+
+[node name="VisualPath" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(1, 0.2, 0.2, 0.1)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(50, 375)
+
+[node name="Enemy_Wolf1" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(250, 350)
+character_name = "Abyss Lava Hound"
+level = 9
+strength = 35
+agility = 24
+base_atk = 32.0
+base_def = 5.0
+xp_reward = 160
+
+[node name="Enemy_Spitter1" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(550, 200)
+character_name = "Abyss Fire Imp"
+level = 9
+strength = 24
+agility = 32
+base_atk = 30.0
+base_def = 3.0
+xp_reward = 170
+
+[node name="Enemy_Wolf2" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(850, 420)
+character_name = "Obsidian Terror"
+level = 10
+strength = 40
+agility = 26
+base_atk = 36.0
+base_def = 6.0
+xp_reward = 180
+
+[node name="Enemy_Spitter2" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(850, 250)
+character_name = "Hellfire Imp"
+level = 10
+strength = 26
+agility = 34
+base_atk = 34.0
+base_def = 3.5
+xp_reward = 190
+
+[node name="Enemy_Wolf3" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(1150, 220)
+character_name = "Lava Behemoth"
+level = 11
+strength = 45
+agility = 28
+base_atk = 40.0
+base_def = 7.0
+xp_reward = 200
+
+[node name="Boss" parent="." instance=ExtResource("5_abyssboss")]
+position = Vector2(1450, 300)
+character_name = "Abyss Mage (Boss)"
+level = 13
+strength = 50
+agility = 20
+intelligence = 60
+base_atk = 45.0
+base_def = 8.0
+move_speed = 110.0
+xp_reward = 800
+
+[node name="Merchant" parent="." instance=ExtResource("6_merchant")]
+position = Vector2(80, 290)
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]

@@ -18,6 +18,9 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var btn_w_plus = $Control/BottomBar/Panel/Skills/SlotW/BtnWPlus
 @onready var btn_e = $Control/BottomBar/Panel/Skills/SlotE/BtnE
 @onready var btn_e_plus = $Control/BottomBar/Panel/Skills/SlotE/BtnEPlus
+@onready var btn_r = $Control/BottomBar/Panel/Skills/SlotR/BtnR
+@onready var btn_r_plus = $Control/BottomBar/Panel/Skills/SlotR/BtnRPlus
+@onready var upgrade_items_container = $Control/ShopPanel/UpgradeScroll/UpgradeItemsContainer
 
 @onready var str_lbl = $Control/BottomBar/Panel/AttrsContainer/StrContainer/StrLabel
 @onready var btn_str_plus = $Control/BottomBar/Panel/AttrsContainer/StrContainer/BtnStrPlus
@@ -43,12 +46,18 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var btn_revive_spot = $Control/GameOverScreen/VBox/BtnReviveSpot
 @onready var shop_status_lbl = $Control/ShopPanel/ShopStatusLabel
 @onready var boss_hp_bar_container = $Control/BossHPBar
+@onready var btn_open_talents = $Control/BottomBar/Panel/BtnOpenTalents
+@onready var talent_panel = $Control/TalentPanel
+@onready var talent_points_lbl = $Control/TalentPanel/PointsLabel
+@onready var talent_rows_container = $Control/TalentPanel/RowsContainer
+@onready var btn_talent_close = $Control/TalentPanel/BtnClose
 @onready var boss_name_lbl = $Control/BossHPBar/VBox/BossNameLabel
 @onready var boss_hp_bar = $Control/BossHPBar/VBox/HPBar
 @onready var boss_hp_lbl = $Control/BossHPBar/VBox/HPBar/Label
 
 var player: CharacterBody2D = null
 var _is_ready = false
+var active_quests: Array = []
 
 var base_shop_items = [
 	{
@@ -95,6 +104,7 @@ func _ready():
 		_on_inventory_changed()
 		_on_skills_changed()
 		_on_gold_changed(player.get_gold())
+		init_quests()
 		
 	# GameManager setup
 	var gm = get_tree().current_scene.get_node_or_null("GameManager")
@@ -110,6 +120,7 @@ func _ready():
 	btn_q.pressed.connect(func(): _on_skill_q_pressed())
 	btn_w.pressed.connect(func(): _on_skill_w_pressed())
 	btn_e.pressed.connect(func(): _on_skill_e_pressed())
+	btn_r.pressed.connect(func(): _on_skill_r_pressed())
 
 	# Connect upgrade button clicks
 	btn_str_plus.pressed.connect(func(): _on_upgrade_attribute("strength"))
@@ -118,6 +129,7 @@ func _ready():
 	btn_q_plus.pressed.connect(func(): _on_learn_skill("Q"))
 	btn_w_plus.pressed.connect(func(): _on_learn_skill("W"))
 	btn_e_plus.pressed.connect(func(): _on_learn_skill("E"))
+	btn_r_plus.pressed.connect(func(): _on_learn_skill("R"))
 	
 	# Connect next stage button click
 	btn_next_stage.pressed.connect(_on_next_stage_pressed)
@@ -130,10 +142,28 @@ func _ready():
 	# Shop connections
 	btn_shop_close.pressed.connect(close_shop_ui)
 
+	# Talent connections
+	btn_open_talents.pressed.connect(func():
+		if talent_panel.visible:
+			close_talent_ui()
+		else:
+			open_talent_ui()
+	)
+	btn_talent_close.pressed.connect(close_talent_ui)
+
 	if btn_revive:
 		btn_revive.pressed.connect(_on_revive_pressed)
 	if btn_revive_spot:
 		btn_revive_spot.pressed.connect(_on_revive_spot_pressed)
+
+	# Cinematic Fade In
+	var fade = get_node_or_null("Control/FadeOverlay")
+	if fade:
+		fade.color.a = 1.0
+		fade.show()
+		var tween = create_tween()
+		tween.tween_property(fade, "color:a", 0.0, 0.6)
+		tween.tween_callback(fade.hide)
 
 	_is_ready = true
 
@@ -176,6 +206,20 @@ func _process(delta):
 				btn_e.text = "E\n闪烁\n(Lv %d)" % lvl_e
 				btn_e.disabled = false
 
+		# R Skill Text & Status (Arrow Rain)
+		var lvl_r = player.get_skill_r_level()
+		if lvl_r == 0:
+			btn_r.text = "R\n未学习"
+			btn_r.disabled = true
+		else:
+			var cd = player.get_skill_r_cooldown()
+			if cd > 0.0:
+				btn_r.text = "R\nCD: %.1f\n(Lv %d)" % [cd, lvl_r]
+				btn_r.disabled = true
+			else:
+				btn_r.text = "R\n箭雨\n(Lv %d)" % lvl_r
+				btn_r.disabled = false
+
 	# Dynamic Boss HP Bar
 	var boss = get_tree().current_scene.get_node_or_null("Boss")
 	if boss and player and not boss.get_is_dead() and player.global_position.distance_to(boss.global_position) < 1000.0:
@@ -194,6 +238,15 @@ func _on_hp_changed(old_hp, new_hp, max_hp):
 	hp_bar.value = new_hp
 	hp_lbl.text = "HP: %d / %d" % [new_hp, max_hp]
 	update_stats_display()
+	if new_hp < old_hp:
+		trigger_damage_flash()
+
+func trigger_damage_flash():
+	var flash = get_node_or_null("Control/DamageFlash")
+	if not flash: return
+	flash.color.a = 0.35
+	var tween = create_tween()
+	tween.tween_property(flash, "color:a", 0.0, 0.45).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 
 func _on_mp_changed(old_mp, new_mp, max_mp):
 	mp_bar.max_value = max_mp
@@ -280,8 +333,11 @@ func _on_skills_changed():
 	btn_q_plus.visible = can_upgrade and player.get_skill_q_level() < 4
 	btn_w_plus.visible = can_upgrade and player.get_skill_w_level() < 4
 	btn_e_plus.visible = can_upgrade and player.get_skill_e_level() < 4
+	btn_r_plus.visible = can_upgrade and player.get_skill_r_level() < 4
 	
 	update_stats_display()
+	if talent_panel.visible:
+		populate_talents()
 
 func update_stats_display():
 	if not player: return
@@ -363,6 +419,7 @@ func _on_inventory_slot_pressed(slot_index):
 					# Update hud
 					_on_gold_changed(player.get_gold())
 					_on_inventory_changed()
+					populate_upgrade_station()
 		else:
 			player.use_item(slot_index)
 
@@ -377,6 +434,10 @@ func _on_skill_w_pressed():
 func _on_skill_e_pressed():
 	if player:
 		player.cast_skill_e_forward()
+
+func _on_skill_r_pressed():
+	if player:
+		player.cast_skill_r(player.get_global_mouse_position())
 
 func _on_upgrade_attribute(attr_name: String):
 	if player:
@@ -423,8 +484,12 @@ func _on_victory():
 			SaveSystem.save_game(player, 2)
 		elif current_scene.contains("stage2.tscn"):
 			SaveSystem.save_game(player, 3)
-		else:
+		elif current_scene.contains("stage3.tscn"):
 			SaveSystem.save_game(player, 4)
+		elif current_scene.contains("stage4.tscn"):
+			SaveSystem.save_game(player, 5)
+		else:
+			SaveSystem.save_game(player, 6)
 	
 	if current_scene.contains("main.tscn"):
 		btn_next_stage.show()
@@ -432,10 +497,18 @@ func _on_victory():
 		btn_restart.text = "重玩本关 (Replay)"
 	elif current_scene.contains("stage2.tscn"):
 		btn_next_stage.show()
-		btn_next_stage.text = "进入最终关 (Stage 3)"
+		btn_next_stage.text = "进入第三关 (Stage 3)"
+		btn_restart.text = "重玩本关 (Replay)"
+	elif current_scene.contains("stage3.tscn"):
+		btn_next_stage.show()
+		btn_next_stage.text = "进入第四关 (Stage 4)"
+		btn_restart.text = "重玩本关 (Replay)"
+	elif current_scene.contains("stage4.tscn"):
+		btn_next_stage.show()
+		btn_next_stage.text = "进入最终关 (Stage 5)"
 		btn_restart.text = "重玩本关 (Replay)"
 	else:
-		# Stage 3 (Final Stage)
+		# Stage 5 (Final Stage)
 		btn_next_stage.hide()
 		if label:
 			label.text = "恭喜通关游侠之路！\n(Congratulations! You saved Ranger's Path!)"
@@ -443,19 +516,41 @@ func _on_victory():
 		btn_restart.text = "重新开始游戏 (Restart Game)"
 
 func _on_next_stage_pressed():
-	var current_scene = get_tree().current_scene.scene_file_path
 	if player:
 		if current_scene.contains("main.tscn"):
 			SaveSystem.save_game(player, 2)
 		elif current_scene.contains("stage2.tscn"):
 			SaveSystem.save_game(player, 3)
+		elif current_scene.contains("stage3.tscn"):
+			SaveSystem.save_game(player, 4)
+		elif current_scene.contains("stage4.tscn"):
+			SaveSystem.save_game(player, 5)
 		else:
 			SaveSystem.save_game(player)
-			
+
+	# Determine target scene
+	var target_scene := ""
 	if current_scene.contains("main.tscn"):
-		get_tree().change_scene_to_file("res://scenes/stage2.tscn")
+		target_scene = "res://scenes/stage2.tscn"
 	elif current_scene.contains("stage2.tscn"):
-		get_tree().change_scene_to_file("res://scenes/stage3.tscn")
+		target_scene = "res://scenes/stage3.tscn"
+	elif current_scene.contains("stage3.tscn"):
+		target_scene = "res://scenes/stage4.tscn"
+	elif current_scene.contains("stage4.tscn"):
+		target_scene = "res://scenes/stage5.tscn"
+
+	if target_scene.is_empty(): return
+
+	# Cinematic Fade Out then change scene
+	var fade = get_node_or_null("Control/FadeOverlay")
+	if fade:
+		fade.color.a = 0.0
+		fade.show()
+		var tween = create_tween()
+		tween.tween_property(fade, "color:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		tween.tween_callback(func(): get_tree().change_scene_to_file(target_scene))
+	else:
+		get_tree().change_scene_to_file(target_scene)
 
 func _on_game_over():
 	game_over_screen.show()
@@ -475,6 +570,7 @@ func open_shop_ui(player_node):
 	if player_node:
 		player = player_node
 	populate_shop()
+	populate_upgrade_station()
 	shop_panel.show()
 	shop_status_lbl.text = ""
 	if player:
@@ -504,8 +600,10 @@ func _on_buy_item_pressed(item_name: String, cost: int, item_data: Dictionary):
 		player.set_gold(current_gold - cost)
 		SynthAudio.play_purchase(self)
 		_show_shop_status("✓ 已购买: " + item_name, Color(0.2, 0.9, 0.2))
+		feed_purchase(item_data.get("name", ""))
 		print("[Shop] Purchase success: ", item_name, " remaining gold: ", player.get_gold())
 		SaveSystem.save_game(player)
+		populate_upgrade_station()
 	else:
 		_show_shop_status("背包已满！（共6格）", Color(1, 0.3, 0.1))
 		print("[Shop] Buy failed: inventory full")
@@ -553,11 +651,27 @@ func _input(event):
 	if event.is_action_pressed("ui_cancel"): # ESC key maps to ui_cancel by default
 		if game_over_screen.visible or victory_screen.visible:
 			return
+		if talent_panel.visible:
+			close_talent_ui()
+			get_viewport().set_input_as_handled()
+			return
+		if shop_panel.visible:
+			close_shop_ui()
+			get_viewport().set_input_as_handled()
+			return
 		if pause_menu.visible:
 			_on_resume_pressed()
 		else:
 			get_tree().paused = true
 			pause_menu.show()
+			
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_K:
+			if talent_panel.visible:
+				close_talent_ui()
+			else:
+				open_talent_ui()
+			get_viewport().set_input_as_handled()
 
 func _on_resume_pressed():
 	get_tree().paused = false
@@ -678,3 +792,398 @@ func populate_shop():
 		vbox.add_child(btn_buy)
 		
 		shop_items_container.add_child(panel)
+
+func populate_upgrade_station():
+	# Clear existing dynamic upgrade panels
+	for child in upgrade_items_container.get_children():
+		child.queue_free()
+		
+	if not player:
+		return
+		
+	var inv = player.get_inventory()
+	var gold_held = player.get_gold()
+	
+	for i in range(inv.size()):
+		var item = inv[i]
+		if not item or item.is_empty():
+			continue
+			
+		var type = item.get("type", "")
+		if type != "weapon" and type != "armor":
+			continue
+			
+		var lvl = item.get("upgrade_level", 0)
+		var cost = 50 + lvl * 50
+		var is_max = lvl >= 5
+		
+		# Instantiate upgrade panel card
+		var panel = Panel.new()
+		panel.custom_minimum_size = Vector2(150, 230)
+		
+		var margin = MarginContainer.new()
+		margin.layout_mode = 1
+		margin.anchors_preset = Control.PRESET_FULL_RECT
+		margin.add_theme_constant_override("margin_left", 8)
+		margin.add_theme_constant_override("margin_right", 8)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_bottom", 8)
+		panel.add_child(margin)
+		
+		var vbox = VBoxContainer.new()
+		vbox.layout_mode = 2
+		vbox.add_theme_constant_override("separation", 6)
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		margin.add_child(vbox)
+		
+		# Name Label (with level suffix if upgraded)
+		var name_lbl = Label.new()
+		var suffix = ""
+		if lvl > 0:
+			suffix = " +%d" % lvl
+		name_lbl.text = item.get("name", "") + suffix
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_lbl.add_theme_font_size_override("font_size", 12)
+		
+		var grade = item.get("grade", "common")
+		if grade == "uncommon":
+			name_lbl.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
+		elif grade == "rare":
+			name_lbl.add_theme_color_override("font_color", Color(0.2, 0.6, 1.0))
+		elif grade == "epic":
+			name_lbl.add_theme_color_override("font_color", Color(0.8, 0.3, 1.0))
+		elif grade == "legendary":
+			name_lbl.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))
+		vbox.add_child(name_lbl)
+		
+		# Description showing current stats
+		var desc_lbl = Label.new()
+		desc_lbl.custom_minimum_size = Vector2(0, 50)
+		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_lbl.add_theme_font_size_override("font_size", 9)
+		desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+		
+		var stat_desc = ""
+		if type == "weapon":
+			stat_desc = "攻击力: +%d" % int(item.get("atk_bonus", 0.0))
+		elif type == "armor":
+			stat_desc = "防御力: +%d\n生命值: +%d" % [int(item.get("def_bonus", 0.0)), int(item.get("hp_bonus", 0.0))]
+		desc_lbl.text = stat_desc
+		vbox.add_child(desc_lbl)
+		
+		# Preview upgrade path
+		var preview_lbl = Label.new()
+		preview_lbl.custom_minimum_size = Vector2(0, 40)
+		preview_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		preview_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		preview_lbl.add_theme_font_size_override("font_size", 9)
+		
+		if is_max:
+			preview_lbl.text = "【已强化至上限】"
+			preview_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.15))
+		else:
+			# Preview upgraded stats
+			preview_lbl.add_theme_color_override("font_color", Color(0.4, 0.9, 0.4))
+			var next_lvl = lvl + 1
+			var base_atk = item.get("base_atk_bonus", item.get("atk_bonus", 0.0))
+			var base_def = item.get("base_def_bonus", item.get("def_bonus", 0.0))
+			var base_hp = item.get("base_hp_bonus", item.get("hp_bonus", 0.0))
+			
+			var next_atk = base_atk * (1.0 + next_lvl * 0.4)
+			var next_def = base_def * (1.0 + next_lvl * 0.4)
+			var next_hp = base_hp * (1.0 + next_lvl * 0.4)
+			
+			if type == "weapon":
+				preview_lbl.text = "强化后 -> 攻击: +%d" % int(next_atk)
+			elif type == "armor":
+				preview_lbl.text = "强化后 -> 防御: +%d\n生命: +%d" % [int(next_def), int(next_hp)]
+		vbox.add_child(preview_lbl)
+		
+		# Cost Label
+		var cost_lbl = Label.new()
+		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cost_lbl.add_theme_font_size_override("font_size", 10)
+		if is_max:
+			cost_lbl.text = "最高等级"
+			cost_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		else:
+			cost_lbl.text = "升级需要: %d 金币" % cost
+			cost_lbl.add_theme_color_override("font_color", Color(0.9, 0.8, 0.15))
+		vbox.add_child(cost_lbl)
+		
+		# Upgrade Button
+		var btn_upgrade = Button.new()
+		btn_upgrade.custom_minimum_size = Vector2(0, 26)
+		btn_upgrade.add_theme_font_size_override("font_size", 10)
+		if is_max:
+			btn_upgrade.text = "已满级"
+			btn_upgrade.disabled = true
+		else:
+			btn_upgrade.text = "强化 (升级)"
+			if gold_held < cost:
+				btn_upgrade.disabled = true
+			else:
+				btn_upgrade.disabled = false
+				btn_upgrade.pressed.connect(func(): _on_upgrade_gear_pressed(i, cost))
+		vbox.add_child(btn_upgrade)
+		
+		upgrade_items_container.add_child(panel)
+
+func _on_upgrade_gear_pressed(slot_index: int, cost: int):
+	if not player:
+		return
+		
+	var inv = player.get_inventory()
+	if slot_index >= inv.size():
+		return
+		
+	var item = inv[slot_index]
+	if not item or item.is_empty():
+		return
+		
+	var current_gold = player.get_gold()
+	if current_gold < cost:
+		_show_shop_status("金币不足，无法强化！", Color(1, 0.3, 0.1))
+		return
+		
+	var lvl = item.get("upgrade_level", 0)
+	if lvl >= 5:
+		_show_shop_status("该装备已达到最高强化等级！", Color(1, 0.3, 0.1))
+		return
+		
+	# Deduct gold
+	player.set_gold(current_gold - cost)
+	
+	# Set base stats if not present
+	if not item.has("base_atk_bonus") and item.has("atk_bonus"):
+		item["base_atk_bonus"] = item.atk_bonus
+	if not item.has("base_def_bonus") and item.has("def_bonus"):
+		item["base_def_bonus"] = item.def_bonus
+	if not item.has("base_hp_bonus") and item.has("hp_bonus"):
+		item["base_hp_bonus"] = item.hp_bonus
+		
+	var next_lvl = lvl + 1
+	item["upgrade_level"] = next_lvl
+	
+	# Compute new stats (+40% per upgrade level)
+	var type = item.get("type", "")
+	if type == "weapon":
+		var base_atk = item.get("base_atk_bonus", 0.0)
+		item["atk_bonus"] = base_atk * (1.0 + next_lvl * 0.4)
+		item["description"] = "Weapon (Upgraded +%d). +%d ATK." % [next_lvl, int(item["atk_bonus"])]
+	elif type == "armor":
+		var base_def = item.get("base_def_bonus", 0.0)
+		var base_hp = item.get("base_hp_bonus", 0.0)
+		item["def_bonus"] = base_def * (1.0 + next_lvl * 0.4)
+		item["hp_bonus"] = base_hp * (1.0 + next_lvl * 0.4)
+		item["description"] = "Armor (Upgraded +%d). +%d DEF, +%d HP." % [next_lvl, int(item["def_bonus"]), int(item["hp_bonus"])]
+		
+	# Update player inventory
+	inv[slot_index] = item
+	player.set_inventory(inv)
+	player.recalculate_item_bonuses()
+	
+	# Play sound & show success status
+	SynthAudio.play_gold(self)
+	_show_shop_status("✓ 强化成功：%s -> +%d!" % [item.get("name", ""), next_lvl], Color(0.2, 0.9, 0.2))
+	
+	# Save game progress
+	SaveSystem.save_game(player)
+	
+	# Update UIs
+	_on_gold_changed(player.get_gold())
+	_on_inventory_changed()
+	populate_upgrade_station()
+
+func open_talent_ui():
+	talent_panel.show()
+	populate_talents()
+
+func close_talent_ui():
+	talent_panel.hide()
+
+func populate_talents():
+	for child in talent_rows_container.get_children():
+		child.queue_free()
+		
+	if not player:
+		return
+		
+	var pts = player.get_skill_points()
+	talent_points_lbl.text = "可用天赋点数: %d" % pts
+	
+	var talents_data = [
+		{
+			"id": "T_CRIT",
+			"name": "暴击强化 (Crit Strike)",
+			"level": player.get_talent_crit_level(),
+			"desc_func": func(lvl): return "增加暴击率。当前: +%d%% -> 下级: +%d%%" % [lvl * 5, (lvl + 1) * 5] if lvl < 4 else "增加暴击率。当前: +20% (已满级)",
+			"color": Color(0.9, 0.35, 0.35)
+		},
+		{
+			"id": "T_EVADE",
+			"name": "闪避强化 (Evasion)",
+			"level": player.get_talent_evasion_level(),
+			"desc_func": func(lvl): return "增加避闪率。当前: +%d%% -> 下级: +%d%%" % [lvl * 5, (lvl + 1) * 5] if lvl < 4 else "增加避闪率。当前: +20% (已满级)",
+			"color": Color(0.35, 0.9, 0.35)
+		},
+		{
+			"id": "T_LIFE",
+			"name": "生命吸取 (Lifesteal)",
+			"level": player.get_talent_lifesteal_level(),
+			"desc_func": func(lvl): return "击中回复生命值。当前: +%d%% -> 下级: +%d%%" % [lvl * 4, (lvl + 1) * 4] if lvl < 4 else "击中回复生命值。当前: +16% (已满级)",
+			"color": Color(0.9, 0.35, 0.9)
+		},
+		{
+			"id": "T_SPEED",
+			"name": "急速移速 (Fleet Foot)",
+			"level": player.get_talent_speed_level(),
+			"desc_func": func(lvl): return "提升移动速度。当前: +%d -> 下级: +%d" % [lvl * 10, (lvl + 1) * 10] if lvl < 4 else "提升移动速度。当前: +40 (已满级)",
+			"color": Color(0.35, 0.8, 0.9)
+		}
+	]
+	
+	for talent in talents_data:
+		var row = HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 10)
+		
+		var v_info = VBoxContainer.new()
+		v_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(v_info)
+		
+		# Name & current Level label
+		var name_lbl = Label.new()
+		name_lbl.text = "%s (Lv %d/4)" % [talent.name, talent.level]
+		name_lbl.add_theme_color_override("font_color", talent.color)
+		name_lbl.add_theme_font_size_override("font_size", 12)
+		v_info.add_child(name_lbl)
+		
+		# Description label
+		var desc_lbl = Label.new()
+		desc_lbl.text = talent.desc_func.call(talent.level)
+		desc_lbl.add_theme_font_size_override("font_size", 10)
+		desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+		v_info.add_child(desc_lbl)
+		
+		# Upgrade "+" Button
+		var btn = Button.new()
+		btn.text = "+"
+		btn.custom_minimum_size = Vector2(30, 30)
+		btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		
+		if talent.level >= 4 or pts <= 0:
+			btn.disabled = true
+		else:
+			btn.disabled = false
+			btn.pressed.connect(func(): _on_upgrade_talent_pressed(talent.id))
+			
+		row.add_child(btn)
+		talent_rows_container.add_child(row)
+
+func _on_upgrade_talent_pressed(talent_id: String):
+	if player and player.get_skill_points() > 0:
+		player.learn_skill(talent_id)
+		# Play a learn sound
+		SynthAudio.play_gold(self)
+		# Save game progress
+		SaveSystem.save_game(player)
+		# Refresh
+		populate_talents()
+		_on_skills_changed()
+
+func init_quests():
+	var path = get_tree().current_scene.scene_file_path
+	active_quests = []
+	if path.contains("main.tscn"):
+		active_quests.append({"id": "s1_kill_wolves", "name": "消灭森林魔狼", "type": "kill", "target_name": "Wolf", "target_count": 3, "current": 0, "completed": false, "gold_reward": 150, "xp_reward": 200})
+		active_quests.append({"id": "s1_buy_potion", "name": "向商人购买1瓶治疗药水", "type": "buy", "target_name": "Potion of Healing", "target_count": 1, "current": 0, "completed": false, "gold_reward": 100, "xp_reward": 100})
+	elif path.contains("stage2.tscn"):
+		active_quests.append({"id": "s2_kill_spiders", "name": "消灭洞穴地狱蜘蛛", "type": "kill", "target_name": "Spider", "target_count": 5, "current": 0, "completed": false, "gold_reward": 250, "xp_reward": 300})
+	elif path.contains("stage3.tscn"):
+		active_quests.append({"id": "s3_kill_boss", "name": "击败腐化古树特兰特", "type": "boss", "target_count": 1, "current": 0, "completed": false, "gold_reward": 400, "xp_reward": 500})
+	elif path.contains("stage4.tscn"):
+		active_quests.append({"id": "s4_kill_spiders", "name": "消灭深渊蛛后护卫", "type": "kill", "target_name": "Wolf/Stalker", "target_count": 6, "current": 0, "completed": false, "gold_reward": 350, "xp_reward": 450})
+	elif path.contains("stage5.tscn"):
+		active_quests.append({"id": "s5_kill_boss", "name": "击败终极深渊魔主", "type": "boss", "target_count": 1, "current": 0, "completed": false, "gold_reward": 800, "xp_reward": 1000})
+	
+	update_quest_ui()
+
+func update_quest_ui():
+	var list_container = get_node_or_null("Control/QuestPanel/VBox/QuestList")
+	if not list_container: return
+	
+	# Clear old labels
+	for child in list_container.get_children():
+		child.queue_free()
+		
+	# Populate new
+	for q in active_quests:
+		var lbl = Label.new()
+		lbl.add_theme_font_size_override("font_size", 10)
+		if q.completed:
+			lbl.text = " ✓ %s (已完成)" % q.name
+			lbl.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
+		else:
+			lbl.text = " • %s (%d/%d)" % [q.name, q.current, q.target_count]
+			lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+		list_container.add_child(lbl)
+
+func feed_kill(enemy_name: String):
+	for q in active_quests:
+		if q.completed: continue
+		if q.type == "kill":
+			if q.target_name.to_lower() in enemy_name.to_lower() or enemy_name.to_lower() in q.target_name.to_lower():
+				q.current = min(q.current + 1, q.target_count)
+				if q.current >= q.target_count:
+					complete_quest(q)
+				update_quest_ui()
+
+func feed_boss_kill():
+	for q in active_quests:
+		if q.completed: continue
+		if q.type == "boss":
+			q.current = 1
+			complete_quest(q)
+			update_quest_ui()
+
+func feed_purchase(item_name: String):
+	for q in active_quests:
+		if q.completed: continue
+		if q.type == "buy":
+			if q.target_name.to_lower() in item_name.to_lower() or item_name.to_lower() in q.target_name.to_lower():
+				q.current = min(q.current + 1, q.target_count)
+				if q.current >= q.target_count:
+					complete_quest(q)
+				update_quest_ui()
+
+func complete_quest(q: Dictionary):
+	q.completed = true
+	if player:
+		player.set_gold(player.get_gold() + q.gold_reward)
+		player.add_xp(q.xp_reward)
+	SynthAudio.play_gold(self)
+	show_achievement_popup(q.name, q.gold_reward, q.xp_reward)
+
+func show_achievement_popup(quest_name: String, gold: int, xp: int):
+	var popup = get_node_or_null("Control/AchievementPopup")
+	if not popup: return
+	
+	var label_detail = popup.get_node_or_null("VBox/LabelDetail")
+	var label_rewards = popup.get_node_or_null("VBox/LabelRewards")
+	
+	if label_detail:
+		label_detail.text = "【%s】" % quest_name
+	if label_rewards:
+		label_rewards.text = "+%d 金币, +%d 经验" % [gold, xp]
+		
+	popup.show()
+	
+	popup.position.y = -110.0
+	var tween = create_tween()
+	tween.tween_property(popup, "position:y", 20.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_interval(3.0)
+	tween.tween_property(popup, "position:y", -110.0, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_callback(popup.hide)

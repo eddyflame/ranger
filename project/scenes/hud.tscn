@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://dhud"]
+[gd_scene load_steps=3 format=3 uid="uid://dhud"]
 
 [ext_resource type="Script" path="res://scenes/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scenes/minimap.gd" id="2_minimap"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -105,6 +106,15 @@ offset_right = 350.0
 offset_bottom = 123.0
 theme_override_colors/font_color = Color(0.9, 0.8, 0.2, 1)
 text = "可用点数: 1"
+
+[node name="BtnOpenTalents" type="Button" parent="Control/BottomBar/Panel"]
+layout_mode = 0
+offset_left = 180.0
+offset_top = 98.0
+offset_right = 300.0
+offset_bottom = 124.0
+theme_override_font_sizes/font_size = 11
+text = "被动天赋 (Talents)"
 
 [node name="GoldLabel" type="Label" parent="Control/BottomBar/Panel"]
 layout_mode = 0
@@ -290,6 +300,22 @@ layout_mode = 2
 text = "E
 Blink"
 
+[node name="SlotR" type="VBoxContainer" parent="Control/BottomBar/Panel/Skills"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnRPlus" type="Button" parent="Control/BottomBar/Panel/Skills/SlotR"]
+custom_minimum_size = Vector2(65, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "+ 升级"
+
+[node name="BtnR" type="Button" parent="Control/BottomBar/Panel/Skills/SlotR"]
+custom_minimum_size = Vector2(65, 65)
+layout_mode = 2
+text = "R
+Arrow Rain"
+
 [node name="BossHPBar" type="PanelContainer" parent="Control"]
 visible = false
 layout_mode = 1
@@ -331,6 +357,85 @@ theme_override_font_sizes/font_size = 11
 text = "HP: 1000 / 1000"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="QuestPanel" type="PanelContainer" parent="Control"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 280.0
+offset_bottom = 200.0
+
+[node name="VBox" type="VBoxContainer" parent="Control/QuestPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="Label" parent="Control/QuestPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.65, 0.15, 1)
+theme_override_font_sizes/font_size = 12
+text = "当前阶段任务 (Stage Quests)"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Control/QuestPanel/VBox"]
+layout_mode = 2
+
+[node name="QuestList" type="VBoxContainer" parent="Control/QuestPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="AchievementPopup" type="PanelContainer" parent="Control"]
+visible = false
+layout_mode = 0
+offset_left = 430.0
+offset_top = -110.0
+offset_right = 850.0
+offset_bottom = -20.0
+
+[node name="VBox" type="VBoxContainer" parent="Control/AchievementPopup"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Header" type="Label" parent="Control/AchievementPopup/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.15, 1)
+theme_override_font_sizes/font_size = 14
+text = "🏆 达成成就！ (Achievement Unlocked!)"
+horizontal_alignment = 1
+
+[node name="LabelDetail" type="Label" parent="Control/AchievementPopup/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "【成就名称】"
+horizontal_alignment = 1
+
+[node name="LabelRewards" type="Label" parent="Control/AchievementPopup/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 10
+text = "+100 Gold, +100 XP"
+horizontal_alignment = 1
+
+[node name="DamageFlash" type="ColorRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.8, 0, 0, 0)
+
+[node name="FadeOverlay" type="ColorRect" parent="Control"]
+z_index = 100
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
 
 [node name="GameOverScreen" type="ColorRect" parent="Control"]
 visible = false
@@ -468,23 +573,35 @@ offset_bottom = 35.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 1)
 theme_override_font_sizes/font_size = 20
-text = "神秘商店 (Mystic Shop)"
+text = "神秘商店与强化工坊 (Shop & Upgrades)"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SellTipLabel" type="Label" parent="Control/ShopPanel"]
+[node name="BuyTitle" type="Label" parent="Control/ShopPanel"]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -300.0
-offset_top = 35.0
-offset_right = 300.0
-offset_bottom = 55.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(0.6, 0.85, 0.6, 1)
-theme_override_font_sizes/font_size = 11
-text = "【出售提示：商店开启时，直接点击您下方背包中的装备即可将其半价出售】"
+offset_left = 20.0
+offset_top = 50.0
+offset_right = 430.0
+offset_bottom = 75.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.15, 0.8)
+theme_override_font_sizes/font_size = 13
+text = "—— 购买商品 (Shop Items) ——"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UpgradeTitle" type="Label" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -430.0
+offset_top = 50.0
+offset_right = -20.0
+offset_bottom = 75.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.95, 0.45, 0.1, 0.8)
+theme_override_font_sizes/font_size = 13
+text = "—— 装备强化 (Upgrade Gear) ——"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -535,9 +652,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -420.0
+offset_left = -425.0
 offset_top = -90.0
-offset_right = 420.0
+offset_right = -15.0
 offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -549,6 +666,132 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 15
+
+[node name="UpgradeScroll" type="ScrollContainer" parent="Control/ShopPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 15.0
+offset_top = -90.0
+offset_right = 425.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="UpgradeItemsContainer" type="HBoxContainer" parent="Control/ShopPanel/UpgradeScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="TalentPanel" type="ColorRect" parent="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -225.0
+offset_top = -150.0
+offset_right = 225.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.08, 0.08, 0.95)
+
+[node name="Title" type="Label" parent="Control/TalentPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 10.0
+offset_right = 150.0
+offset_bottom = 35.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.2, 0.85, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+text = "被动天赋树 (Passive Talents)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnClose" type="Button" parent="Control/TalentPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_top = 10.0
+offset_right = -15.0
+offset_bottom = 35.0
+grow_horizontal = 0
+text = "X"
+
+[node name="PointsLabel" type="Label" parent="Control/TalentPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 40.0
+offset_right = 150.0
+offset_bottom = 60.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "可用点数: 0"
+horizontal_alignment = 1
+
+[node name="RowsContainer" type="VBoxContainer" parent="Control/TalentPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -70.0
+offset_right = 200.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Minimap" type="Control" parent="Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 160.0
+grow_horizontal = 0
+script = ExtResource("2_minimap")
+
+[node name="BtnZoomIn" type="Button" parent="Control/Minimap"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 110.0
+offset_right = 30.0
+offset_bottom = 130.0
+theme_override_font_sizes/font_size = 9
+text = "+"
+
+[node name="BtnZoomOut" type="Button" parent="Control/Minimap"]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 110.0
+offset_right = 130.0
+offset_bottom = 130.0
+theme_override_font_sizes/font_size = 9
+text = "-"
 
 [node name="PauseMenu" type="ColorRect" parent="Control"]
 process_mode = 3

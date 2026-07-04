@@ -53,6 +53,17 @@ private:
     float skill_e_cooldown = 0.0f; // Blink
     int skill_e_level = 0;
     
+    float skill_r_cooldown = 0.0f; // Arrow Rain
+    float skill_r_cooldown_max = 25.0f;
+    int skill_r_level = 0;
+    float skill_r_mana_cost = 75.0f;
+    
+    int talent_crit_level = 0;
+    int talent_evasion_level = 0;
+    int talent_lifesteal_level = 0;
+    int talent_speed_level = 0;
+    float lava_aura_timer = 2.0f;
+    
     int gold = 0;
     
     float shake_intensity = 0.0f;
@@ -88,6 +99,7 @@ public:
     void remove_from_inventory(int slot_index);
     void use_item(int slot_index);
     void recalculate_item_bonuses();
+    int get_set_count(const String &set_name) const;
 
     // Skills
     void toggle_skill_q();
@@ -103,8 +115,22 @@ public:
     void set_skill_e_level(int p_lvl);
     float get_skill_e_cooldown() const { return skill_e_cooldown; }
     
+    int get_skill_r_level() const { return skill_r_level; }
+    void set_skill_r_level(int p_lvl);
+    float get_skill_r_cooldown() const { return skill_r_cooldown; }
+    
+    int get_talent_crit_level() const { return talent_crit_level; }
+    void set_talent_crit_level(int p_lvl);
+    int get_talent_evasion_level() const { return talent_evasion_level; }
+    void set_talent_evasion_level(int p_lvl);
+    int get_talent_lifesteal_level() const { return talent_lifesteal_level; }
+    void set_talent_lifesteal_level(int p_lvl);
+    int get_talent_speed_level() const { return talent_speed_level; }
+    void set_talent_speed_level(int p_lvl);
+    
     void cast_skill_e(Vector2 target_pos);
     void cast_skill_e_forward();
+    void cast_skill_r(Vector2 target_pos);
     void trigger_shake(float intensity, float duration);
     
     void learn_skill(const String &skill_name);

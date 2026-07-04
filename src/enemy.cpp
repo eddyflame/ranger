@@ -74,6 +74,17 @@ void Enemy::_physics_process(double delta) {
         attack_cooldown -= delta;
     }
 
+    if (slow_timer > 0.0f) {
+        slow_timer -= delta;
+    }
+
+    // Dynamic modulation for status effects (web slow purple tint)
+    if (slow_timer > 0.0f) {
+        set_modulate(Color(0.75f, 0.5f, 0.9f, 1.0f));
+    } else {
+        set_modulate(Color(1.0f, 1.0f, 1.0f, 1.0f));
+    }
+
     SceneTree *tree = get_tree();
     if (!tree) return;
 

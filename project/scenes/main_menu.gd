@@ -18,6 +18,16 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var lbl_header3 = $CenterContainer/VBox/LevelSelectRow/CardStage3/VBox/Header
 @onready var lbl_name3 = $CenterContainer/VBox/LevelSelectRow/CardStage3/VBox/Name
 
+@onready var card_stage4 = $CenterContainer/VBox/LevelSelectRow/CardStage4
+@onready var btn_start4 = $CenterContainer/VBox/LevelSelectRow/CardStage4/VBox/BtnStart4
+@onready var lbl_header4 = $CenterContainer/VBox/LevelSelectRow/CardStage4/VBox/Header
+@onready var lbl_name4 = $CenterContainer/VBox/LevelSelectRow/CardStage4/VBox/Name
+
+@onready var card_stage5 = $CenterContainer/VBox/LevelSelectRow/CardStage5
+@onready var btn_start5 = $CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/BtnStart5
+@onready var lbl_header5 = $CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/Header
+@onready var lbl_name5 = $CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/Name
+
 func _ready():
 	var max_unlocked = 1
 	var save_path = "user://rangers_path_save.json"
@@ -90,6 +100,44 @@ func _ready():
 		lbl_header3.text = "第三关"
 		card_stage3.modulate = Color(0.4, 0.4, 0.4, 0.8)
 
+	# Style Stage 4 Card
+	if max_unlocked >= 4:
+		btn_start4.disabled = false
+		btn_start4.text = "进入关卡"
+		card_stage4.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		if max_unlocked >= 5:
+			# Stage 4 is cleared
+			lbl_header4.text = "第四关 (已通关)"
+			lbl_header4.add_theme_color_override("font_color", Color(0.95, 0.8, 0.2))
+			lbl_name4.add_theme_color_override("font_color", Color(0.95, 0.8, 0.2))
+		else:
+			lbl_header4.text = "第四关"
+			lbl_header4.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1)) # Base orange/gold
+	else:
+		btn_start4.disabled = true
+		btn_start4.text = "未解锁"
+		lbl_header4.text = "第四关"
+		card_stage4.modulate = Color(0.4, 0.4, 0.4, 0.8)
+
+	# Style Stage 5 Card
+	if max_unlocked >= 5:
+		btn_start5.disabled = false
+		btn_start5.text = "进入关卡"
+		card_stage5.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		if max_unlocked >= 6:
+			# Stage 5 is cleared (Victory Game Over)
+			lbl_header5.text = "第五关 (已通关)"
+			lbl_header5.add_theme_color_override("font_color", Color(0.95, 0.8, 0.2))
+			lbl_name5.add_theme_color_override("font_color", Color(0.95, 0.8, 0.2))
+		else:
+			lbl_header5.text = "第五关"
+			lbl_header5.add_theme_color_override("font_color", Color(0.95, 0.45, 0.1))
+	else:
+		btn_start5.disabled = true
+		btn_start5.text = "未解锁"
+		lbl_header5.text = "第五关"
+		card_stage5.modulate = Color(0.4, 0.4, 0.4, 0.8)
+
 func _on_stage1_pressed():
 	# Load level 1 while keeping current saved player stats if they exist
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
@@ -99,6 +147,12 @@ func _on_stage2_pressed():
 
 func _on_stage3_pressed():
 	get_tree().change_scene_to_file("res://scenes/stage3.tscn")
+
+func _on_stage4_pressed():
+	get_tree().change_scene_to_file("res://scenes/stage4.tscn")
+
+func _on_stage5_pressed():
+	get_tree().change_scene_to_file("res://scenes/stage5.tscn")
 
 func _on_new_game_pressed():
 	# Delete save file to start a completely brand new fresh game at level 1
@@ -126,6 +180,10 @@ func _on_continue_pressed():
 				get_tree().change_scene_to_file("res://scenes/stage2.tscn")
 			elif lvl_index == 3:
 				get_tree().change_scene_to_file("res://scenes/stage3.tscn")
+			elif lvl_index == 4:
+				get_tree().change_scene_to_file("res://scenes/stage4.tscn")
+			elif lvl_index == 5:
+				get_tree().change_scene_to_file("res://scenes/stage5.tscn")
 			else:
 				get_tree().change_scene_to_file("res://scenes/main.tscn")
 

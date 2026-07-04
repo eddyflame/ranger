@@ -30,6 +30,7 @@ protected:
     float move_speed = 150.0f;
 
     bool is_dead = false;
+    float slow_timer = 0.0f;
 
 public:
     Character();
@@ -86,6 +87,9 @@ public:
     virtual void die();
     
     bool get_is_dead() const { return is_dead; }
+
+    void apply_slow(float duration);
+    float get_slow_timer() const { return slow_timer; }
 };
 
 } // namespace godot

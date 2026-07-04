@@ -51,6 +51,8 @@ void Character::_bind_methods() {
     ClassDB::bind_method(D_METHOD("restore_mana", "amount"), &Character::restore_mana);
     ClassDB::bind_method(D_METHOD("die"), &Character::die);
     ClassDB::bind_method(D_METHOD("get_is_dead"), &Character::get_is_dead);
+    ClassDB::bind_method(D_METHOD("apply_slow", "duration"), &Character::apply_slow);
+    ClassDB::bind_method(D_METHOD("get_slow_timer"), &Character::get_slow_timer);
 
     // Register properties
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "character_name"), "set_character_name", "get_character_name");
@@ -73,6 +75,7 @@ void Character::_bind_methods() {
     ADD_SIGNAL(MethodInfo("died"));
     ADD_SIGNAL(MethodInfo("damage_taken", PropertyInfo(Variant::FLOAT, "amount"), PropertyInfo(Variant::OBJECT, "attacker")));
     ADD_SIGNAL(MethodInfo("healed", PropertyInfo(Variant::FLOAT, "amount")));
+    ADD_SIGNAL(MethodInfo("slow_applied", PropertyInfo(Variant::FLOAT, "duration")));
 }
 
 Character::Character() {}
@@ -155,7 +158,11 @@ float Character::get_total_def() const {
 }
 
 float Character::get_total_move_speed() const {
-    return move_speed;
+    float speed = move_speed;
+    if (slow_timer > 0.0f) {
+        speed *= 0.5f;
+    }
+    return speed;
 }
 
 void Character::take_damage(float amount, Node* attacker) {
@@ -224,6 +231,11 @@ void Character::restore_mana(float amount) {
 void Character::die() {
     is_dead = true;
     emit_signal("died");
+}
+
+void Character::apply_slow(float duration) {
+    slow_timer = duration;
+    emit_signal("slow_applied", duration);
 }
 
 } // namespace godot

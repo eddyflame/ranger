@@ -1,0 +1,105 @@
+[gd_scene load_steps=10 format=3 uid="uid://dstage4"]
+
+[ext_resource type="Script" path="res://scenes/stage4.gd" id="1_stage4"]
+[ext_resource type="PackedScene" uid="uid://dplayer" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://denemy" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" uid="uid://drangedenemy" path="res://scenes/ranged_enemy.tscn" id="4_ranged"]
+[ext_resource type="PackedScene" uid="uid://dspiderqueen" path="res://scenes/spider_queen.tscn" id="5_spiderqueen"]
+[ext_resource type="PackedScene" uid="uid://ditemdrop" path="res://scenes/item_drop.tscn" id="6_itemdrop"]
+[ext_resource type="PackedScene" uid="uid://dmerchant" path="res://scenes/merchant.tscn" id="7_merchant"]
+[ext_resource type="PackedScene" uid="uid://dhud" path="res://scenes/hud.tscn" id="8_hud"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_stage4"]
+source_geometry_group_name = &"navigation_polygon_source_group"
+
+[node name="Stage4" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_stage4")
+
+[node name="GameManager" type="GameManager" parent="."]
+
+[node name="Background" type="Node2D" parent="."]
+z_index = -10
+
+[node name="ColorRect" type="ColorRect" parent="Background"]
+mouse_filter = 2
+offset_right = 1600.0
+offset_bottom = 600.0
+color = Color(0.06, 0.03, 0.08, 1)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_stage4")
+
+[node name="VisualPath" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(1, 1, 1, 0.1)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(50, 375)
+
+[node name="Enemy_Wolf1" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(250, 375)
+character_name = "Spider Forest Wolf"
+level = 7
+strength = 28
+agility = 20
+base_atk = 24.0
+base_def = 4.0
+xp_reward = 120
+
+[node name="Enemy_Spitter1" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(600, 225)
+character_name = "Forest Spitter"
+level = 7
+strength = 18
+agility = 26
+base_atk = 22.0
+base_def = 2.0
+xp_reward = 130
+
+[node name="Enemy_Wolf2" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(950, 425)
+character_name = "Corrupted Wolf"
+level = 8
+strength = 32
+agility = 22
+base_atk = 28.0
+base_def = 4.5
+xp_reward = 140
+
+[node name="Enemy_Spitter2" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(950, 275)
+character_name = "Corrupted Spitter"
+level = 8
+strength = 20
+agility = 28
+base_atk = 26.0
+base_def = 2.5
+xp_reward = 150
+
+[node name="Enemy_Wolf3" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(1200, 225)
+character_name = "Venom Stalker"
+level = 9
+strength = 36
+agility = 24
+base_atk = 32.0
+base_def = 5.0
+xp_reward = 160
+
+[node name="Boss" parent="." instance=ExtResource("5_spiderqueen")]
+position = Vector2(1450, 300)
+character_name = "Spider Queen (Boss)"
+level = 11
+strength = 65
+agility = 22
+intelligence = 35
+base_atk = 50.0
+base_def = 9.0
+move_speed = 105.0
+xp_reward = 750
+
+[node name="Merchant" parent="." instance=ExtResource("7_merchant")]
+position = Vector2(80, 290)
+
+[node name="HUD" parent="." instance=ExtResource("8_hud")]

@@ -17,6 +17,11 @@ void Projectile::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("set_searing_effect", "searing"), &Projectile::set_searing_effect);
     ClassDB::bind_method(D_METHOD("get_searing_effect"), &Projectile::get_searing_effect);
+
+    ClassDB::bind_method(D_METHOD("set_web_effect", "web"), &Projectile::set_web_effect);
+    ClassDB::bind_method(D_METHOD("get_web_effect"), &Projectile::get_web_effect);
+
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_web"), "set_web_effect", "get_web_effect");
 }
 
 Projectile::Projectile() {}
@@ -60,6 +65,9 @@ void Projectile::_physics_process(double delta) {
                     }
                 }
                 target->call("take_damage", damage, actual_attacker);
+            }
+            if (is_web && target->has_method("apply_slow")) {
+                target->call("apply_slow", 3.0f);
             }
             queue_free();
         } else {

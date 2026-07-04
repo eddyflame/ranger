@@ -61,6 +61,8 @@ func _ready():
 			child.connect("healed", Callable(self, "_on_character_healed").bind(child))
 		if child.has_signal("boss_stomped"):
 			child.connect("boss_stomped", Callable(self, "_on_boss_stomped").bind(child))
+		if child.has_signal("slow_applied"):
+			child.connect("slow_applied", Callable(self, "_on_character_slow_applied").bind(child))
 		# Connect enemy death to dynamic loot generation
 		if child.is_in_group("enemies") and child.has_signal("died"):
 			child.connect("died", Callable(self, "_on_enemy_died").bind(child))
@@ -142,6 +144,7 @@ func _on_character_damage_taken(amount: float, attacker: Node, victim: Node):
 		return
 		
 	if amount <= 0.0: return
+	SaveSystem.spawn_hit_sparks(self, victim.global_position)
 	
 	var color = Color(0.95, 0.2, 0.2)
 	var text_prefix = ""
@@ -292,6 +295,8 @@ func _respawn_enemies():
 				enemy_inst.connect("healed", Callable(self, "_on_character_healed").bind(enemy_inst))
 			if enemy_inst.has_signal("boss_stomped"):
 				enemy_inst.connect("boss_stomped", Callable(self, "_on_boss_stomped").bind(enemy_inst))
+			if enemy_inst.has_signal("slow_applied"):
+				enemy_inst.connect("slow_applied", Callable(self, "_on_character_slow_applied").bind(enemy_inst))
 			if enemy_inst.is_in_group("enemies") and enemy_inst.has_signal("died"):
 				enemy_inst.connect("died", Callable(self, "_on_enemy_died").bind(enemy_inst))
 
@@ -299,6 +304,13 @@ func _on_enemy_died(enemy_node):
 	if not enemy_node: return
 	var is_boss = ("Boss" in enemy_node.name)
 	var death_pos = enemy_node.global_position
+
+	var hud = get_node_or_null("HUD")
+	if hud:
+		if is_boss:
+			hud.feed_boss_kill()
+		else:
+			hud.feed_kill(enemy_node.character_name)
 
 	if is_boss:
 		for i in range(3):
@@ -319,3 +331,6 @@ func _on_enemy_died(enemy_node):
 
 	if player:
 		SaveSystem.save_game(player)
+
+func _on_character_slow_applied(duration: float, victim: Node):
+	spawn_floating_text(victim.global_position + Vector2(0, -35), "减速 (Slowed)!", Color(0.65, 0.25, 0.85))
