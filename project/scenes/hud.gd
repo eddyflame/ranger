@@ -497,8 +497,10 @@ func _on_victory():
 			SaveSystem.save_game(player, 4)
 		elif current_scene.contains("stage4.tscn"):
 			SaveSystem.save_game(player, 5)
-		else:
+		elif current_scene.contains("stage5.tscn"):
 			SaveSystem.save_game(player, 6)
+		else:
+			SaveSystem.save_game(player, 7)
 	
 	if current_scene.contains("main.tscn"):
 		btn_next_stage.show()
@@ -516,8 +518,12 @@ func _on_victory():
 		btn_next_stage.show()
 		btn_next_stage.text = TranslationManager.t("MENU_STAGE_ENTER") + ": " + TranslationManager.t("STAGE_5")
 		btn_restart.text = TranslationManager.t("HUD_PLAY_AGAIN")
+	elif current_scene.contains("stage5.tscn"):
+		btn_next_stage.show()
+		btn_next_stage.text = TranslationManager.t("MENU_STAGE_ENTER") + ": " + TranslationManager.t("STAGE_6")
+		btn_restart.text = TranslationManager.t("HUD_PLAY_AGAIN")
 	else:
-		# Stage 5 (Final Stage)
+		# Stage 6 (Final Stage)
 		btn_next_stage.hide()
 		if label:
 			label.text = TranslationManager.t("FINAL_STAGE_CONGRATS")
@@ -535,6 +541,8 @@ func _on_next_stage_pressed():
 			SaveSystem.save_game(player, 4)
 		elif current_scene.contains("stage4.tscn"):
 			SaveSystem.save_game(player, 5)
+		elif current_scene.contains("stage5.tscn"):
+			SaveSystem.save_game(player, 6)
 		else:
 			SaveSystem.save_game(player)
 
@@ -548,6 +556,8 @@ func _on_next_stage_pressed():
 		target_scene = "res://scenes/stage4.tscn"
 	elif current_scene.contains("stage4.tscn"):
 		target_scene = "res://scenes/stage5.tscn"
+	elif current_scene.contains("stage5.tscn"):
+		target_scene = "res://scenes/stage6.tscn"
 
 	if target_scene.is_empty(): return
 

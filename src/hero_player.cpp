@@ -611,6 +611,11 @@ float HeroPlayer::get_total_move_speed() const {
     if (slow_timer > 0.0f) {
         speed *= 0.5f;
     }
+    // Cap max movement speed to prevent runaway stacking
+    const float kMaxMoveSpeed = 320.0f;
+    if (speed > kMaxMoveSpeed) {
+        speed = kMaxMoveSpeed;
+    }
     return speed;
 }
 

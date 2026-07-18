@@ -22,7 +22,7 @@ Boss::Boss() {
     intelligence = 15;
     base_atk = 12.0f;
     base_def = 4.0f;
-    move_speed = 90.0f;
+    move_speed = 60.0f;
     xp_reward = 450;
     
     aggro_range = 220.0f;

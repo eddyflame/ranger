@@ -25,6 +25,8 @@ static func save_game(player: Node2D, next_level_override: int = -1) -> void:
 				level_index = 4
 			elif path.contains("stage5"):
 				level_index = 5
+			elif path.contains("stage6"):
+				level_index = 6
 			else:
 				level_index = 1
 	

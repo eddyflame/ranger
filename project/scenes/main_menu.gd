@@ -28,6 +28,11 @@ const SaveSystem = preload("res://scenes/save_system.gd")
 @onready var lbl_header5 = $CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/Header
 @onready var lbl_name5 = $CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/Name
 
+@onready var card_stage6 = $CenterContainer/VBox/LevelSelectRow/CardStage6
+@onready var btn_start6 = $CenterContainer/VBox/LevelSelectRow/CardStage6/VBox/BtnStart6
+@onready var lbl_header6 = $CenterContainer/VBox/LevelSelectRow/CardStage6/VBox/Header
+@onready var lbl_name6 = $CenterContainer/VBox/LevelSelectRow/CardStage6/VBox/Name
+
 func _ready():
 	SynthAudioManager.set_bgm_mode("menu")
 	
@@ -166,6 +171,26 @@ func refresh_translations():
 		lbl_header5.text = TranslationManager.t("STAGE_5")
 		card_stage5.modulate = Color(0.4, 0.4, 0.4, 0.8)
 
+	# Style Stage 6 Card
+	lbl_name6.text = TranslationManager.t("STAGE_6_NAME")
+	$CenterContainer/VBox/LevelSelectRow/CardStage6/VBox/Desc.text = TranslationManager.t("STAGE_6_DESC")
+	if max_unlocked >= 6:
+		btn_start6.disabled = false
+		btn_start6.text = TranslationManager.t("MENU_STAGE_ENTER")
+		card_stage6.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		if max_unlocked >= 7:
+			lbl_header6.text = TranslationManager.t("STAGE_6") + TranslationManager.t("STAGE_CLEARED")
+			lbl_header6.add_theme_color_override("font_color", Color(0.95, 0.8, 0.2))
+			lbl_name6.add_theme_color_override("font_color", Color(0.95, 0.8, 0.2))
+		else:
+			lbl_header6.text = TranslationManager.t("STAGE_6")
+			lbl_header6.add_theme_color_override("font_color", Color(0.65, 0.25, 0.95))
+	else:
+		btn_start6.disabled = true
+		btn_start6.text = TranslationManager.t("MENU_STAGE_LOCKED")
+		lbl_header6.text = TranslationManager.t("STAGE_6")
+		card_stage6.modulate = Color(0.4, 0.4, 0.4, 0.8)
+
 func _on_stage1_pressed():
 	# Load level 1 while keeping current saved player stats if they exist
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
@@ -181,6 +206,9 @@ func _on_stage4_pressed():
 
 func _on_stage5_pressed():
 	get_tree().change_scene_to_file("res://scenes/stage5.tscn")
+
+func _on_stage6_pressed():
+	get_tree().change_scene_to_file("res://scenes/stage6.tscn")
 
 func _on_new_game_pressed():
 	# Delete save file to start a completely brand new fresh game at level 1
@@ -212,6 +240,8 @@ func _on_continue_pressed():
 				get_tree().change_scene_to_file("res://scenes/stage4.tscn")
 			elif lvl_index == 5:
 				get_tree().change_scene_to_file("res://scenes/stage5.tscn")
+			elif lvl_index == 6:
+				get_tree().change_scene_to_file("res://scenes/stage6.tscn")
 			else:
 				get_tree().change_scene_to_file("res://scenes/main.tscn")
 

@@ -1,0 +1,107 @@
+[gd_scene load_steps=9 format=3 uid="uid://dstage6"]
+
+[ext_resource type="Script" path="res://scenes/stage6.gd" id="1_stage6"]
+[ext_resource type="PackedScene" uid="uid://dplayer" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://denemy" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" uid="uid://drangedenemy" path="res://scenes/ranged_enemy.tscn" id="4_ranged"]
+[ext_resource type="PackedScene" uid="uid://dabyssboss" path="res://scenes/abyss_boss.tscn" id="5_abyssboss"]
+[ext_resource type="PackedScene" uid="uid://dmerchant" path="res://scenes/merchant.tscn" id="6_merchant"]
+[ext_resource type="PackedScene" uid="uid://dhud" path="res://scenes/hud.tscn" id="7_hud"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_stage6"]
+source_geometry_group_name = &"navigation_polygon_source_group"
+
+[node name="Stage6" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_stage6")
+
+[node name="GameManager" type="GameManager" parent="."]
+
+[node name="Background" type="Node2D" parent="."]
+z_index = -10
+
+[node name="ColorRect" type="ColorRect" parent="Background"]
+mouse_filter = 2
+offset_right = 1600.0
+offset_bottom = 600.0
+color = Color(0.05, 0.02, 0.1, 1)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_stage6")
+
+[node name="VisualPath" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(0.5, 0.1, 0.9, 0.15)
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(50, 290)
+
+[node name="Enemy_Wraith1" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(280, 380)
+character_name = "Bone Revenant"
+level = 13
+strength = 50
+agility = 30
+base_atk = 42.0
+base_def = 7.0
+xp_reward = 220
+
+[node name="Enemy_Specter1" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(600, 180)
+character_name = "Void Specter"
+level = 13
+strength = 32
+agility = 42
+base_atk = 40.0
+base_def = 4.0
+xp_reward = 230
+
+[node name="Enemy_Wraith2" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(960, 360)
+character_name = "Undead Colossus"
+level = 14
+strength = 58
+agility = 32
+base_atk = 48.0
+base_def = 9.0
+xp_reward = 240
+
+[node name="Enemy_Specter2" parent="." instance=ExtResource("4_ranged")]
+position = Vector2(960, 170)
+character_name = "Death Harbinger"
+level = 14
+strength = 36
+agility = 46
+base_atk = 44.0
+base_def = 5.0
+xp_reward = 250
+
+[node name="Enemy_Wraith3" parent="." instance=ExtResource("3_enemy")]
+position = Vector2(1280, 240)
+character_name = "Lich Knight"
+level = 15
+strength = 65
+agility = 35
+base_atk = 54.0
+base_def = 10.0
+xp_reward = 270
+
+[node name="Boss" parent="." instance=ExtResource("5_abyssboss")]
+position = Vector2(1500, 310)
+character_name = "Shadow Lich (Final Boss)"
+level = 18
+strength = 65
+agility = 30
+intelligence = 90
+base_atk = 60.0
+base_def = 12.0
+move_speed = 70.0
+xp_reward = 3500
+aggro_range = 500.0
+attack_range = 280.0
+chase_limit = 700.0
+
+[node name="Merchant" parent="." instance=ExtResource("6_merchant")]
+position = Vector2(200, 290)
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]

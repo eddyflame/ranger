@@ -268,6 +268,44 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "进入关卡"
 
+[node name="CardStage6" type="PanelContainer" parent="CenterContainer/VBox/LevelSelectRow"]
+custom_minimum_size = Vector2(220, 220)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/VBox/LevelSelectRow/CardStage6"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Header" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage6/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.25, 0.95, 1)
+theme_override_font_sizes/font_size = 14
+text = "第六关"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage6/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "亡灵之域"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="CenterContainer/VBox/LevelSelectRow/CardStage6/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "终结亡灵巫王！
+推荐等级: 15级"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnStart6" type="Button" parent="CenterContainer/VBox/LevelSelectRow/CardStage6/VBox"]
+custom_minimum_size = Vector2(140, 35)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "进入关卡"
+
 [node name="BottomRow" type="VBoxContainer" parent="CenterContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
@@ -298,6 +336,7 @@ text = "退出游戏"
 [connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage3/VBox/BtnStart3" to="." method="_on_stage3_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage4/VBox/BtnStart4" to="." method="_on_stage4_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage5/VBox/BtnStart5" to="." method="_on_stage5_pressed"]
+[connection signal="pressed" from="CenterContainer/VBox/LevelSelectRow/CardStage6/VBox/BtnStart6" to="." method="_on_stage6_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnContinue" to="." method="_on_continue_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnNewGame" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="CenterContainer/VBox/BottomRow/BtnQuit" to="." method="_on_quit_pressed"]

@@ -20,7 +20,7 @@ func _ready():
 	SynthAudioManager.set_bgm_mode("explore")
 	
 	# Dynamic Map Inflation & Positions Scaling (1.6x space for kiting)
-	var map_scale := 1.6
+	var map_scale := 2.2
 	var centroid := Vector2.ZERO
 	for p in OUTLINE_POINTS:
 		centroid += p

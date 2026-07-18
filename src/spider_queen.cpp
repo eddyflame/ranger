@@ -25,7 +25,7 @@ SpiderQueen::SpiderQueen() {
     intelligence = 25;
     base_atk = 16.0f;
     base_def = 6.0f;
-    move_speed = 100.0f;
+    move_speed = 68.0f;
     xp_reward = 800;
 
     aggro_range = 300.0f;

@@ -40,7 +40,7 @@ Enemy::Enemy() {
     intelligence = 2;
     base_atk = 4.0f;
     base_def = 1.0f;
-    move_speed = 110.0f;
+    move_speed = 75.0f;
     xp_reward = 45;
 }
 

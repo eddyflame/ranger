@@ -23,6 +23,7 @@ var dictionary := {
 	"STAGE_3": { "en": "Stage 3", "zh": "第三关" },
 	"STAGE_4": { "en": "Stage 4", "zh": "第四关" },
 	"STAGE_5": { "en": "Stage 5", "zh": "第五关" },
+	"STAGE_6": { "en": "Stage 6", "zh": "第六关" },
 	"STAGE_CLEARED": { "en": " (Cleared)", "zh": " (已通关)" },
 	
 	"STAGE_1_NAME": { "en": "Forest Path", "zh": "森林小径" },
@@ -35,6 +36,8 @@ var dictionary := {
 	"STAGE_4_DESC": { "en": "Lair of the Queen!\nRec. Level: 9+", "zh": "深渊蛛后的巢穴！\n推荐等级: 9级+" },
 	"STAGE_5_NAME": { "en": "Volcano Summit", "zh": "火山之巅" },
 	"STAGE_5_DESC": { "en": "Final Overlord showdown!\nRec. Level: 12+", "zh": "决战深渊魔主！\n推荐等级: 12级+" },
+	"STAGE_6_NAME": { "en": "Undead Realm", "zh": "亡灵之域" },
+	"STAGE_6_DESC": { "en": "Slay the Shadow Lich!\nRec. Level: 15+", "zh": "终结亡灵巫王！\n推荐等级: 15级+" },
 
 	# HUD Panel headers
 	"HUD_STAGE_QUESTS": { "en": "Stage Quests", "zh": "当前阶段任务" },

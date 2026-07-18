@@ -28,7 +28,7 @@ AbyssBoss::AbyssBoss() {
     intelligence = 60;
     base_atk = 20.0f;
     base_def = 8.0f;
-    move_speed = 110.0f;
+    move_speed = 75.0f;
     xp_reward = 2000;
 
     aggro_range = 400.0f;
